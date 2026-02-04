@@ -1,6 +1,7 @@
 import { ORDER_STATUS } from '../types/models'
 import { isValidTransition } from './orderState'
 import { handleOrderReadiness } from './orderReadiness'
+import { handleOvenEntry } from './ovenHooks'
 import { logAdminAction } from './adminActionService'
 import crypto from 'crypto'
 
@@ -36,7 +37,8 @@ export class OrderService {
 
       const customerSnapshot = {
         customerId: null,
-        name: (customerName && customerName.trim()) ? customerName.trim() : 'Walk-in',
+        name:
+          customerName && customerName.trim() ? customerName.trim() : 'Walk-in',
         phone: customerPhone || null,
         type: type || 'PICKUP',
         address: address || null,
@@ -79,7 +81,7 @@ export class OrderService {
     }
   }
 
-  async updateStatus(orderId, newStatus, customer = null) {
+  async updateStatus(orderId, newStatus, customer = null, assignedTo = null) {
     const order = await this.orders.findById(orderId)
     if (!order) {
       throw new Error(`Order ${orderId} not found`)
@@ -90,16 +92,27 @@ export class OrderService {
     }
 
     order.status = newStatus
+    if (assignedTo) {
+      order.assignedTo = assignedTo
+    }
     order.updatedAt = new Date().toISOString()
 
     if (newStatus === ORDER_STATUS.COMPLETED) {
       order.completedAt = new Date().toISOString()
     }
 
+    if (newStatus === ORDER_STATUS.OVEN) {
+      order.ovenEnteredAt = new Date().toISOString()
+    }
+
     await this.orders.update(order)
 
     if (newStatus === ORDER_STATUS.READY) {
       await handleOrderReadiness(order, customer, this.notifications)
+    }
+
+    if (newStatus === ORDER_STATUS.OVEN) {
+      await handleOvenEntry(order, this.notifications)
     }
 
     return order

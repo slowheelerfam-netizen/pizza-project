@@ -1,9 +1,10 @@
 import { ORDER_STATUS } from '../types/models'
 
 const STATUS_SEQUENCE = [
-  ORDER_STATUS.CREATED,
+  ORDER_STATUS.NEW,
   ORDER_STATUS.CONFIRMED,
   ORDER_STATUS.IN_PREP,
+  ORDER_STATUS.OVEN,
   ORDER_STATUS.READY,
   ORDER_STATUS.COMPLETED,
 ]
@@ -31,6 +32,14 @@ export function isValidTransition(currentStatus, nextStatus) {
       currentStatus !== ORDER_STATUS.COMPLETED &&
       currentStatus !== ORDER_STATUS.CANCELLED
     )
+  }
+
+  // Allow skipping CONFIRMED (NEW -> IN_PREP)
+  if (
+    currentStatus === ORDER_STATUS.NEW &&
+    nextStatus === ORDER_STATUS.IN_PREP
+  ) {
+    return true
   }
 
   const currentIndex = STATUS_SEQUENCE.indexOf(currentStatus)

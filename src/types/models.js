@@ -2,6 +2,7 @@ export const ORDER_STATUS = {
   NEW: 'NEW',
   CONFIRMED: 'CONFIRMED',
   IN_PREP: 'IN_PREP',
+  OVEN: 'OVEN',
   READY: 'READY',
   COMPLETED: 'COMPLETED',
   CANCELLED: 'CANCELLED',
@@ -33,32 +34,32 @@ export const TOPPINGS = {
 }
 
 export const MENU_ITEMS = [
-  { 
-    id: 'm1', 
-    name: 'Margherita', 
-    basePrice: 10, 
+  {
+    id: 'm1',
+    name: 'Margherita',
+    basePrice: 10,
     description: 'Classic tomato sauce and mozzarella',
-    defaultToppings: []
+    defaultToppings: [],
   },
-  { 
-    id: 'm2', 
-    name: 'Pepperoni', 
-    basePrice: 12, 
+  {
+    id: 'm2',
+    name: 'Pepperoni',
+    basePrice: 12,
     description: 'A classic favorite with generous pepperoni',
-    defaultToppings: ['pep']
+    defaultToppings: ['pep'],
   },
-  { 
-    id: 'm3', 
-    name: 'Veggie Supreme', 
-    basePrice: 14, 
+  {
+    id: 'm3',
+    name: 'Veggie Supreme',
+    basePrice: 14,
     description: 'Loaded with fresh vegetables',
-    defaultToppings: ['mush', 'onions', 'peppers', 'olives']
+    defaultToppings: ['mush', 'onions', 'peppers', 'olives'],
   },
-  { 
-    id: 'm4', 
-    name: 'Meat Lovers', 
-    basePrice: 16, 
+  {
+    id: 'm4',
+    name: 'Meat Lovers',
+    basePrice: 16,
     description: 'Pepperoni, sausage, and bacon',
-    defaultToppings: ['pep', 'sausage', 'bacon']
+    defaultToppings: ['pep', 'sausage', 'bacon'],
   },
 ]

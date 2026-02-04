@@ -195,14 +195,7 @@ export async function updateStatusAction(
   assignedTo = null
 ) {
   try {
-    await orderService.updateStatus(orderId, newStatus)
-
-    if (assignedTo) {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { assignedTo },
-      })
-    }
+    await orderService.updateStatus(orderId, newStatus, null, assignedTo)
 
     revalidatePath(ROUTES.HOME)
     revalidatePath('/kitchen')
@@ -238,6 +231,8 @@ export async function updateOrderDetailsAction(orderId, formData) {
 
     await orderService.updateOrderDetails(orderId, updates)
     revalidatePath(ROUTES.HOME)
+    revalidatePath('/kitchen')
+    revalidatePath('/monitor')
     return { success: true, message: 'Order updated successfully' }
   } catch (error) {
     console.error('[UPDATE_ORDER_FAILED]', error)

@@ -14,6 +14,7 @@ describe('OrderService', () => {
       create: vi.fn(),
       findById: vi.fn(),
       update: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null), // Mock findFirst for order number generation
     }
     mockWarningsRepo = {}
     mockActionsRepo = { create: vi.fn() }
@@ -67,5 +68,52 @@ describe('OrderService', () => {
     await expect(orderService.createOrder(input)).rejects.toThrow(
       'Database error'
     )
+  })
+
+  it('should set ovenEnteredAt when status changes to OVEN', async () => {
+    const orderId = 'test-order-id'
+    const initialOrder = {
+      id: orderId,
+      status: ORDER_STATUS.IN_PREP,
+      customerSnapshot: { name: 'Test' },
+      items: [],
+    }
+
+    mockOrdersRepo.findById.mockResolvedValue({ ...initialOrder })
+    mockOrdersRepo.update.mockResolvedValue(true)
+
+    // Mock isValidTransition to allow PREP -> OVEN
+    // (Assuming the real function works, but here we might need to mock if it was external,
+    // but isValidTransition is imported. We rely on its logic or mock it if we could.
+    // Since we import it, we assume it allows PREP->OVEN. Let's just trust the integration or mock the module if needed.
+    // Actually, in this test file, isValidTransition is a real import.
+    // PREP -> OVEN is valid.)
+
+    const updatedOrder = await orderService.updateStatus(
+      orderId,
+      ORDER_STATUS.OVEN
+    )
+
+    expect(updatedOrder.status).toBe(ORDER_STATUS.OVEN)
+    expect(updatedOrder.ovenEnteredAt).toBeDefined()
+    expect(new Date(updatedOrder.ovenEnteredAt).getTime()).toBeGreaterThan(0)
+  })
+
+  it('should update assignedTo when provided', async () => {
+    const orderId = 'test-assign-id'
+    const initialOrder = {
+      id: orderId,
+      status: ORDER_STATUS.NEW,
+      customerSnapshot: { name: 'Test' },
+      items: []
+    }
+
+    mockOrdersRepo.findById.mockResolvedValue({ ...initialOrder })
+    mockOrdersRepo.update.mockResolvedValue(true)
+
+    const updatedOrder = await orderService.updateStatus(orderId, ORDER_STATUS.IN_PREP, null, 'Chef David')
+
+    expect(updatedOrder.status).toBe(ORDER_STATUS.IN_PREP)
+    expect(updatedOrder.assignedTo).toBe('Chef David')
   })
 })

@@ -12,6 +12,7 @@ export default function AdminDashboard({ orders }) {
   const [loading, setLoading] = useState(null)
   const [overrideOrder, setOverrideOrder] = useState(null)
   const [editingOrder, setEditingOrder] = useState(null)
+  const [selectedOrder, setSelectedOrder] = useState(null)
   // Support multiple expanded rows
   const [expandedOrderIds, setExpandedOrderIds] = useState(new Set())
   const [reason, setReason] = useState('')
@@ -37,11 +38,11 @@ export default function AdminDashboard({ orders }) {
     setExpandedOrderIds(nextIds)
   }
 
-  // Poll for updates every 10 seconds to keep dashboard live
+  // Poll for updates every 2 seconds to keep dashboard live
   React.useEffect(() => {
     const interval = setInterval(() => {
       router.refresh()
-    }, 10000)
+    }, 2000)
     return () => clearInterval(interval)
   }, [router])
 
@@ -63,8 +64,171 @@ export default function AdminDashboard({ orders }) {
     setComment('')
   }
 
+  // --- Sorting & Grouping Logic ---
+  // COLUMN 1: NEW (Sort: Time Entered - Oldest First)
+  const newOrders = orders
+    .filter((o) => ['NEW', 'CONFIRMED'].includes(o.status))
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+  // COLUMN 2: PREP (Sort: Time Entered - Oldest First)
+  const prepOrders = orders
+    .filter((o) => o.status === 'IN_PREP')
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+  // COLUMN 3: OVEN (Sort: Name - A to Z)
+  const ovenOrders = orders
+    .filter((o) => o.status === 'OVEN')
+    .sort((a, b) =>
+      (a.customerSnapshot.name || '').localeCompare(
+        b.customerSnapshot.name || ''
+      )
+    )
+
+  // COLUMN 4: READY (Sort: Name - A to Z)
+  // Also including COMPLETED/CANCELLED for Admin visibility
+  const readyOrders = orders
+    .filter((o) => ['READY', 'COMPLETED', 'CANCELLED'].includes(o.status))
+    .sort((a, b) =>
+      (a.customerSnapshot.name || '').localeCompare(
+        b.customerSnapshot.name || ''
+      )
+    )
+
+  // Calculate dynamic flex basis (ensure at least 1)
+  const newFlex = Math.max(1, newOrders.length)
+  const prepFlex = Math.max(1, prepOrders.length)
+  const ovenFlex = Math.max(1, ovenOrders.length)
+  const readyFlex = Math.max(1, readyOrders.length)
+
+  // Helper to render an order card (Minimal: Name + Status)
+  const renderOrderCard = (order) => {
+    let statusColor = 'bg-gray-100 text-gray-800'
+    let statusLabel = 'NEW'
+
+    if (order.status === 'IN_PREP') {
+      statusColor = 'bg-blue-100 text-blue-800'
+      statusLabel = 'PREP'
+    } else if (order.status === 'OVEN') {
+      statusColor = 'bg-orange-100 text-orange-800'
+      statusLabel = 'OVEN'
+    } else if (order.status === 'READY') {
+      statusColor = 'bg-green-100 text-green-800'
+      statusLabel = 'READY'
+    }
+
+    return (
+      <div
+        key={order.id}
+        onClick={() => setSelectedOrder(order)}
+        className={`mb-2 cursor-pointer rounded-lg border p-3 shadow-sm transition-all hover:shadow-md ${
+          selectedOrder?.id === order.id
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-gray-200 bg-white'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <span className="truncate font-bold text-gray-900">
+            {order.customerSnapshot.name || 'Walk-in'}
+          </span>
+          <span
+            className={`rounded px-2 py-0.5 text-xs font-bold ${statusColor}`}
+          >
+            {statusLabel}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="flex h-[calc(100vh-100px)] flex-col space-y-4">
+      {/* ===== Detail Modal (Chunk 4) ===== */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedOrder.customerSnapshot.name}
+                </h2>
+                <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+                  <span>
+                    {new Date(selectedOrder.createdAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                  <span>•</span>
+                  <span className="font-bold">{selectedOrder.status}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-6 max-h-[60vh] space-y-4 overflow-y-auto">
+              {selectedOrder.items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-bold text-gray-900">{item.name}</h3>
+                      <p className="text-sm text-gray-600">
+                        {item.size} • {item.crust}
+                      </p>
+                      {item.toppings.length > 0 && (
+                        <p className="mt-1 text-sm text-gray-800">
+                          {item.toppings.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2 border-t pt-4">
+              <button
+                onClick={() => {
+                  setSelectedOrder(null)
+                  setEditingOrder(selectedOrder)
+                }}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedOrder(null)
+                  setOverrideOrder(selectedOrder)
+                }}
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-100"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ===== Edit Order Modal ===== */}
       <OrderEditModal
         order={editingOrder}
@@ -154,143 +318,88 @@ export default function AdminDashboard({ orders }) {
         </div>
       )}
 
-      {/* ===== Orders Queue ===== */}
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
-          <h2 className="text-xl font-bold text-gray-900">Active Orders</h2>
-          <button
-            onClick={() => setShowLogs(!showLogs)}
-            className="text-sm font-medium text-gray-500 hover:text-gray-900"
-          >
-            {showLogs ? 'Hide Logs' : 'Show Logs & Warnings'}
-          </button>
+      {/* ===== 4-COLUMN DYNAMIC LAYOUT ===== */}
+      <div className="flex flex-1 gap-4 overflow-hidden">
+        {/* COLUMN 1: NEW */}
+        <div
+          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          style={{ flex: newFlex }}
+        >
+          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 className="text-xl font-bold text-gray-900">New</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {newOrders.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">No new orders</div>
+            ) : (
+              newOrders.map(renderOrderCard)
+            )}
+          </div>
         </div>
 
-        <div className="divide-y divide-gray-100">
-          {orders.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              No active orders
-            </div>
-          ) : (
-            orders.map((order) => {
-              const isExpanded = expandedOrderIds.has(order.id)
-              return (
-                <div
-                  key={order.id}
-                  className="bg-white transition-colors hover:bg-gray-50"
-                >
-                  {/* Summary Row */}
-                  <div
-                    className="flex cursor-pointer items-center justify-between p-4"
-                    onClick={() => toggleExpand(order.id)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-full font-bold text-white ${
-                          order.status === 'NEW'
-                            ? 'bg-blue-500'
-                            : order.status === 'CONFIRMED'
-                              ? 'bg-yellow-500'
-                              : order.status === 'IN_PREP'
-                                ? 'bg-orange-500'
-                                : 'bg-green-500'
-                        }`}
-                      >
-                        {order.displayId}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900">
-                          {order.customerSnapshot.name || 'Walk-in'}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {order.type} • {order.items.length} items
-                        </p>
-                      </div>
-                    </div>
+        {/* COLUMN 2: PREP */}
+        <div
+          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          style={{ flex: prepFlex }}
+        >
+          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 className="text-xl font-bold text-gray-900">Prep</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {prepOrders.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">Prep is clear</div>
+            ) : (
+              prepOrders.map(renderOrderCard)
+            )}
+          </div>
+        </div>
 
-                    <div className="flex items-center gap-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${
-                          order.status === 'NEW'
-                            ? 'bg-blue-100 text-blue-700'
-                            : order.status === 'CONFIRMED'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : order.status === 'IN_PREP'
-                                ? 'bg-orange-100 text-orange-700'
-                                : 'bg-green-100 text-green-700'
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-                      <svg
-                        className={`h-5 w-5 text-gray-400 transition-transform ${
-                          isExpanded ? 'rotate-180' : ''
-                        }`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </div>
-                  </div>
+        {/* COLUMN 3: OVEN */}
+        <div
+          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          style={{ flex: ovenFlex }}
+        >
+          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 className="text-xl font-bold text-gray-900">Oven</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {ovenOrders.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">Oven is empty</div>
+            ) : (
+              ovenOrders.map(renderOrderCard)
+            )}
+          </div>
+        </div>
 
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-100 bg-gray-50/50 p-4 pl-16">
-                      <div className="mb-4 space-y-2">
-                        {order.items.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="flex gap-2 text-sm text-gray-800"
-                          >
-                            <span className="font-bold">1x</span>
-                            <span>
-                              {item.name} ({item.size}) - {item.crust}{' '}
-                              {item.toppings.length > 0 &&
-                                `with ${item.toppings.join(', ')}`}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex gap-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setEditingOrder(order)
-                          }}
-                          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          Edit Order
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setOverrideOrder(order)
-                          }}
-                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-100"
-                        >
-                          Delete Order
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })
-          )}
+        {/* COLUMN 4: READY */}
+        <div
+          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          style={{ flex: readyFlex }}
+        >
+          <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 className="text-xl font-bold text-gray-900">Ready & Done</h2>
+            <button
+              onClick={() => setShowLogs(!showLogs)}
+              className="text-sm font-medium text-gray-500 hover:text-gray-900"
+            >
+              {showLogs ? 'Hide Logs' : 'Show Logs'}
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {readyOrders.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                No active/past orders
+              </div>
+            ) : (
+              readyOrders.map(renderOrderCard)
+            )}
+          </div>
         </div>
       </div>
 
       {showLogs && (
         <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-500">
-          System Logs & Warnings are currently hidden to simplify the view.
+          System Logs & Warnings are currently hidden.
         </div>
       )}
     </div>

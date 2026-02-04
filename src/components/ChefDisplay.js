@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { generateLabelText } from '../utils/receiptPrinter'
+
 export default function ChefDisplay({
   initialOrders,
   employees = [],
@@ -18,11 +20,11 @@ export default function ChefDisplay({
     setOrders(initialOrders)
   }, [initialOrders])
 
-  // Poll for updates every 10 seconds
+  // Poll for updates every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       router.refresh()
-    }, 10000)
+    }, 2000)
     return () => clearInterval(interval)
   }, [router])
 
@@ -40,147 +42,187 @@ export default function ChefDisplay({
       setSelectedOrder(null)
     }
 
+    // TRIGGER PRINT IF STATUS IS OVEN
+    if (newStatus === 'OVEN') {
+      const orderToPrint = orders.find((o) => o.id === orderId)
+      if (orderToPrint) {
+        console.log('\n--- [PHYSICAL LABEL PRINT START] ---')
+        console.log(generateLabelText(orderToPrint))
+        console.log('--- [PHYSICAL LABEL PRINT END] ---\n')
+      }
+    }
+
     await updateStatusAction(orderId, newStatus, assignedTo)
     router.refresh()
   }
 
-  const allOrders = orders
-    .filter((o) =>
-      ['NEW', 'CONFIRMED', 'IN_PREP', 'OVEN', 'READY'].includes(o.status)
-    )
-    .sort((a, b) => {
-      // Sort by status priority then by time
-      const statusPriority = {
-        NEW: 1,
-        CONFIRMED: 1,
-        IN_PREP: 2,
-        OVEN: 3,
-        READY: 4,
-        COMPLETED: 5,
-      }
-      if (statusPriority[a.status] !== statusPriority[b.status]) {
-        return statusPriority[a.status] - statusPriority[b.status]
-      }
-      return new Date(a.createdAt) - new Date(b.createdAt)
-    })
+  // 1. Split and Sort Orders
+  // COLUMN 1: NEW (Sort: Time Entered - Oldest First)
+  const newOrders = orders
+    .filter((o) => ['NEW', 'CONFIRMED'].includes(o.status))
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
 
-  // Filter only on-duty employees for assignment, or show all?
-  // Better to show all but maybe group them. For now, just all employees.
-  // Actually, user said "assign duties to the employees... assignments: Front Counter, Chef, Cook".
-  // Probably only Chefs and Cooks should be assigned to orders?
-  // Let's just show all for flexibility.
+  // COLUMN 2: PREP (Sort: Time Entered - Oldest First)
+  const prepOrders = orders
+    .filter((o) => o.status === 'IN_PREP')
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+  // COLUMN 3: OVEN (Sort: Name - A to Z)
+  const ovenOrders = orders
+    .filter((o) => o.status === 'OVEN')
+    .sort((a, b) =>
+      (a.customerSnapshot.name || '').localeCompare(
+        b.customerSnapshot.name || ''
+      )
+    )
+
+  // COLUMN 4: READY (Sort: Name - A to Z)
+  const readyOrders = orders
+    .filter((o) => o.status === 'READY')
+    .sort((a, b) =>
+      (a.customerSnapshot.name || '').localeCompare(
+        b.customerSnapshot.name || ''
+      )
+    )
+
+  // Dynamic Column Sizing
+  const newFlex = Math.max(1, newOrders.length)
+  const prepFlex = Math.max(1, prepOrders.length)
+  const ovenFlex = Math.max(1, ovenOrders.length)
+  const readyFlex = Math.max(1, readyOrders.length)
+
   const availableStaff = employees.filter((e) => Boolean(e.isOnDuty))
 
-  // Dashboard View
+  // Helper to render an order card (Minimal: Name + Status)
+  const renderOrderCard = (order) => {
+    let statusColor = 'bg-gray-100 text-gray-800'
+    let statusLabel = 'NEW'
+
+    // 3. Color Logic
+    if (order.status === 'IN_PREP') {
+      statusColor = 'bg-blue-100 text-blue-800'
+      statusLabel = 'PREP'
+    } else if (order.status === 'OVEN') {
+      statusColor = 'bg-orange-100 text-orange-800'
+      statusLabel = 'OVEN'
+    } else if (order.status === 'READY') {
+      statusColor = 'bg-green-100 text-green-800'
+      statusLabel = 'READY'
+    }
+
+    return (
+      <div
+        key={order.id}
+        onClick={() => {
+          setSelectedOrder(order)
+          setAssignmentMap((prev) => ({
+            ...prev,
+            [order.id]: order.assignedTo || '',
+          }))
+        }}
+        className={`mb-2 cursor-pointer rounded-lg border p-3 shadow-sm transition-all hover:shadow-md ${
+          selectedOrder?.id === order.id
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-gray-200 bg-white'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <span className="truncate font-bold text-gray-900">
+            {order.customerSnapshot.name || 'Walk-in'}
+          </span>
+          <span
+            className={`rounded px-2 py-0.5 text-xs font-bold ${statusColor}`}
+          >
+            {statusLabel}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-      {/* FULL WIDTH LIST */}
-      <div className="w-full overflow-y-auto bg-white">
-        <div className="sticky top-0 z-10 border-b border-gray-100 bg-white p-4">
-          <h2 className="text-xl font-bold text-gray-900">
-            Active Orders ({allOrders.length})
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50 transition-all duration-500">
+      {/* COLUMN 1: NEW */}
+      <div
+        className="flex flex-col border-r border-gray-200 bg-white transition-all duration-500"
+        style={{ flex: newFlex }}
+      >
+        <div className="border-b border-gray-100 p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+            <span>🔔</span> NEW
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-sm font-medium text-blue-800">
+              {newOrders.length}
+            </span>
           </h2>
         </div>
-        <div className="divide-y divide-gray-100">
-          {allOrders.map((order) => {
-            let statusColor = 'bg-gray-100 text-gray-800'
-            let statusLabel = 'NEW'
-            let nextAction = 'START PREP 🔪'
-            let nextStatus = 'IN_PREP'
+        <div className="flex-1 overflow-y-auto p-4">
+          {newOrders.map(renderOrderCard)}
+          {newOrders.length === 0 && (
+            <div className="py-12 text-center text-gray-400">No new orders</div>
+          )}
+        </div>
+      </div>
 
-            if (order.status === 'IN_PREP') {
-              statusColor = 'bg-blue-100 text-blue-800'
-              statusLabel = 'PREP'
-              nextAction = 'ADVANCE TO OVEN 🔥'
-              nextStatus = 'OVEN'
-            } else if (order.status === 'OVEN') {
-              statusColor = 'bg-orange-100 text-orange-800'
-              statusLabel = 'OVEN'
-              nextAction = 'MARK READY ✅'
-              nextStatus = 'READY'
-            } else if (order.status === 'READY') {
-              statusColor = 'bg-green-100 text-green-800'
-              statusLabel = 'READY'
-              nextAction = 'CLOSE OUT 🏁'
-              nextStatus = 'COMPLETED'
-            }
+      {/* COLUMN 2: PREP */}
+      <div
+        className="flex flex-col border-r border-gray-200 bg-white transition-all duration-500"
+        style={{ flex: prepFlex }}
+      >
+        <div className="border-b border-gray-100 p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+            <span>🔪</span> PREP
+            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-sm font-medium text-indigo-800">
+              {prepOrders.length}
+            </span>
+          </h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {prepOrders.map(renderOrderCard)}
+          {prepOrders.length === 0 && (
+            <div className="py-12 text-center text-gray-400">Prep is clear</div>
+          )}
+        </div>
+      </div>
 
-            return (
-              <div
-                key={order.id}
-                className={`p-4 transition-colors hover:bg-gray-50 ${
-                  selectedOrder?.id === order.id ? 'bg-blue-50' : ''
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xl font-bold text-white">
-                    {order.displayId}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-lg font-bold text-gray-900">
-                      {order.customerSnapshot.name || 'Walk-in'}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`rounded px-2 py-0.5 text-xs font-bold ${statusColor}`}
-                      >
-                        {statusLabel}
-                      </span>
-                      <p className="text-sm text-gray-500">
-                        {order.items.length} items •{' '}
-                        {Math.floor(
-                          (new Date() - new Date(order.createdAt)) / 60000
-                        )}
-                        m ago
-                      </p>
-                      {order.assignedTo && (
-                        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
-                          👤 {order.assignedTo}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+      {/* COLUMN 3: OVEN */}
+      <div
+        className="flex flex-col border-r border-gray-200 bg-white transition-all duration-500"
+        style={{ flex: ovenFlex }}
+      >
+        <div className="border-b border-gray-200 bg-white p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+            <span>🔥</span> OVEN
+            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-sm font-medium text-orange-800">
+              {ovenOrders.length}
+            </span>
+          </h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {ovenOrders.map(renderOrderCard)}
+          {ovenOrders.length === 0 && (
+            <div className="py-12 text-center text-gray-400">Oven is empty</div>
+          )}
+        </div>
+      </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedOrder(order)
-                        setAssignmentMap((prev) => ({
-                          ...prev,
-                          [order.id]: order.assignedTo || '',
-                        }))
-                      }}
-                      className="rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      View Details
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleStatusUpdate(order.id, nextStatus)
-                      }}
-                      className={`min-w-[180px] rounded-lg px-4 py-2 text-sm font-bold text-white shadow-sm transition-all active:scale-95 ${
-                        nextStatus === 'IN_PREP'
-                          ? 'bg-blue-600 hover:bg-blue-700'
-                          : nextStatus === 'OVEN'
-                            ? 'bg-orange-500 hover:bg-orange-600'
-                            : nextStatus === 'READY'
-                              ? 'bg-green-600 hover:bg-green-700'
-                              : 'bg-gray-800 hover:bg-gray-900'
-                      }`}
-                    >
-                      {nextAction}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-          {allOrders.length === 0 && (
-            <div className="p-8 text-center text-gray-400">
-              No active orders
+      {/* COLUMN 4: READY */}
+      <div
+        className="flex flex-col bg-gray-50 transition-all duration-500"
+        style={{ flex: readyFlex }}
+      >
+        <div className="border-b border-gray-200 bg-white p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+            <span>✅</span> READY
+            <span className="rounded-full bg-green-100 px-2 py-0.5 text-sm font-medium text-green-800">
+              {readyOrders.length}
+            </span>
+          </h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {readyOrders.map(renderOrderCard)}
+          {readyOrders.length === 0 && (
+            <div className="py-12 text-center text-gray-400">
+              No ready orders
             </div>
           )}
         </div>
@@ -223,33 +265,35 @@ export default function ChefDisplay({
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
-              {/* Employee Assignment Selector */}
-              <div className="mb-6 rounded-lg bg-indigo-50 p-4">
-                <label className="mb-2 block text-sm font-bold text-indigo-900">
-                  Assign Chef / Cook
-                </label>
-                <select
-                  value={assignmentMap[selectedOrder.id] || ''}
-                  onChange={(e) => {
-                    const newAssignee = e.target.value
-                    setAssignmentMap((prev) => ({
-                      ...prev,
-                      [selectedOrder.id]: newAssignee,
-                    }))
-                  }}
-                  className="w-full rounded-lg border border-indigo-200 bg-white px-4 py-2 text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-                >
-                  <option value="">-- Select Staff --</option>
-                  {availableStaff.length === 0 && (
-                    <option disabled>No staff currently on duty</option>
-                  )}
-                  {availableStaff.map((emp) => (
-                    <option key={emp.id} value={emp.name}>
-                      {emp.name} ({emp.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Employee Assignment Selector (Only for NEW orders) */}
+              {['NEW', 'CONFIRMED'].includes(selectedOrder.status) && (
+                <div className="mb-6 rounded-lg bg-indigo-50 p-4">
+                  <label className="mb-2 block text-sm font-bold text-indigo-900">
+                    Assign Chef / Cook
+                  </label>
+                  <select
+                    value={assignmentMap[selectedOrder.id] || ''}
+                    onChange={(e) => {
+                      const newAssignee = e.target.value
+                      setAssignmentMap((prev) => ({
+                        ...prev,
+                        [selectedOrder.id]: newAssignee,
+                      }))
+                    }}
+                    className="w-full rounded-lg border border-indigo-200 bg-white px-4 py-2 text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                  >
+                    <option value="">-- Select Staff --</option>
+                    {availableStaff.length === 0 && (
+                      <option disabled>No staff currently on duty</option>
+                    )}
+                    {availableStaff.map((emp) => (
+                      <option key={emp.id} value={emp.name}>
+                        {emp.name} ({emp.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-6">
                 {selectedOrder.items.map((item, idx) => (
@@ -286,18 +330,55 @@ export default function ChefDisplay({
             </div>
 
             <div className="border-t border-gray-100 bg-gray-50 p-6">
-              <button
-                onClick={() =>
-                  handleStatusUpdate(
-                    selectedOrder.id,
-                    'IN_PREP',
-                    assignmentMap[selectedOrder.id]
+              {/* 2. Button Logic in Modal (Status-Driven) */}
+              {(() => {
+                // NEW: Assign & Start Prep
+                if (['NEW', 'CONFIRMED'].includes(selectedOrder.status)) {
+                  return (
+                    <button
+                      onClick={() =>
+                        handleStatusUpdate(
+                          selectedOrder.id,
+                          'IN_PREP',
+                          assignmentMap[selectedOrder.id]
+                        )
+                      }
+                      className="w-full rounded-xl bg-indigo-600 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-indigo-500 active:scale-95"
+                    >
+                      {assignmentMap[selectedOrder.id]
+                        ? `ASSIGN TO ${assignmentMap[selectedOrder.id]} & START PREP`
+                        : 'START PREP'}
+                    </button>
                   )
                 }
-                className="w-full rounded-xl bg-indigo-600 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-indigo-500 active:scale-95"
-              >
-                ADVANCE TO OVEN 🔥
-              </button>
+
+                // PREP: Advance to Oven
+                if (selectedOrder.status === 'IN_PREP') {
+                  return (
+                    <button
+                      onClick={() =>
+                        handleStatusUpdate(
+                          selectedOrder.id,
+                          'OVEN',
+                          selectedOrder.assignedTo
+                        )
+                      }
+                      className="w-full rounded-xl bg-orange-500 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-orange-400 active:scale-95"
+                    >
+                      ADVANCE TO OVEN 🔥
+                    </button>
+                  )
+                }
+
+                // OVEN / READY: No Actions allowed for Chef
+                return (
+                  <div className="text-center font-medium text-gray-500">
+                    {selectedOrder.status === 'OVEN'
+                      ? 'Order is in Oven. Waiting for Expo to mark Ready.'
+                      : 'Order is Ready. No further actions.'}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </div>

@@ -14,97 +14,89 @@ export default function MonitorDisplay({ initialOrders }) {
   useEffect(() => {
     const interval = setInterval(() => {
       router.refresh()
-    }, 5000) // Fast refresh for monitor
+    }, 2000)
     return () => clearInterval(interval)
   }, [router])
 
-  const preparing = orders.filter((o) => ['IN_PREP', 'OVEN'].includes(o.status))
-  const ready = orders.filter((o) => o.status === 'READY')
+  // CHUNK 2: Monitor displays PREP orders only
+  const prepOrders = orders
+    .filter((o) => o.status === 'IN_PREP')
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
 
   return (
-    <div className="flex h-screen flex-col p-8">
-      {/* Header */}
-      <header className="mb-12 flex items-center justify-between border-b border-slate-700 pb-6">
-        <h1 className="text-5xl font-black tracking-tight text-white">
-          🍕 ORDER STATUS
+    <div className="min-h-screen bg-slate-900 p-4 md:p-8 text-white">
+      <header className="mb-8 flex items-center justify-between border-b border-slate-700 pb-6">
+        <h1 className="text-4xl font-black tracking-tight">
+          🔪 MONITOR: PREP STATION
         </h1>
-        <div className="flex items-center gap-4">
-          <span className="text-xl font-medium text-slate-400">
-            {new Date().toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
+        <div className="rounded-full bg-slate-800 px-4 py-2 font-mono text-xl text-slate-400">
+          {prepOrders.length} Active
         </div>
       </header>
 
-      {/* Columns */}
-      <div className="grid flex-1 grid-cols-2 gap-12">
-        {/* PREPARING COLUMN */}
-        <div className="rounded-3xl bg-slate-800/50 p-8">
-          <h2 className="mb-8 flex items-center gap-4 text-4xl font-bold text-orange-400">
-            <span className="animate-pulse">🔥</span> WE'RE COOKING
-          </h2>
-          <div className="grid grid-cols-1 gap-6">
-            {preparing.map((order) => (
-              <div
-                key={order.id}
-                className="flex items-center justify-between rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-lg"
-              >
-                <div className="flex items-center gap-6">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-500 text-2xl font-bold text-white">
-                    {order.displayId}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-start">
+        {prepOrders.map((order) => (
+          <div
+            key={order.id}
+            className="rounded-2xl border-2 border-slate-700 bg-slate-800 p-6 shadow-xl"
+          >
+            <div className="mb-6 flex items-center justify-between border-b-2 border-slate-700 pb-4">
+              <h3 className="truncate text-3xl font-extrabold text-white tracking-tight">
+                {order.customerSnapshot.name}
+              </h3>
+              <span className="rounded-lg bg-blue-900 px-3 py-1.5 text-sm font-black text-blue-200 uppercase tracking-wider">
+                PREP
+              </span>
+            </div>
+            
+            <div className="space-y-6">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="text-lg">
+                  <div className="flex items-start justify-between">
+                    <span className="font-bold text-slate-100 text-xl">
+                      {item.quantity || 1}x {item.name}
+                    </span>
+                    <span className="whitespace-nowrap font-semibold text-slate-400">
+                      {item.size}
+                    </span>
                   </div>
-                  <div>
-                    <h3 className="text-3xl font-bold text-white">
-                      {order.customerSnapshot.name}
-                    </h3>
-                    <p className="text-lg text-slate-400">
-                      {order.items.length} items
-                    </p>
+                  
+                  <div className="pl-6 mt-1 text-base text-slate-300">
+                    <div className="font-medium">{item.crust}</div>
+                    {item.toppings && item.toppings.length > 0 && (
+                      <div className="mt-1 leading-relaxed text-slate-400">
+                        {item.toppings.join(', ')}
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-            ))}
-            {preparing.length === 0 && (
-              <p className="text-center text-2xl text-slate-600 italic">
-                Oven is empty!
-              </p>
-            )}
-          </div>
-        </div>
 
-        {/* READY COLUMN */}
-        <div className="rounded-3xl border border-green-900/50 bg-green-900/20 p-8">
-          <h2 className="mb-8 flex items-center gap-4 text-4xl font-bold text-green-400">
-            <span>✅</span> READY FOR PICKUP
-          </h2>
-          <div className="grid grid-cols-1 gap-6">
-            {ready.map((order) => (
-              <div
-                key={order.id}
-                className="animate-bounce-subtle flex items-center justify-between rounded-2xl bg-green-600 p-6 shadow-lg"
-              >
-                <div className="flex items-center gap-6">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-2xl font-bold text-green-700">
-                    {order.displayId}
-                  </div>
-                  <div>
-                    <h3 className="text-3xl font-bold text-white">
-                      {order.customerSnapshot.name}
-                    </h3>
-                    <p className="text-lg text-green-100">Ready now!</p>
-                  </div>
+                  {item.notes && (
+                    <div className="mt-3 rounded-lg bg-amber-900/40 px-3 py-2 text-base font-bold text-amber-400 border border-amber-900/50">
+                      NOTE: {item.notes}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
-            {ready.length === 0 && (
-              <p className="text-center text-2xl text-slate-600 italic">
-                No orders ready yet.
-              </p>
-            )}
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-center justify-between border-t-2 border-slate-700 pt-4 text-sm text-slate-400 font-medium">
+              <span className="font-mono text-base">
+                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              {order.assignedTo && (
+                <span className="flex items-center gap-2 text-slate-300 bg-slate-700/50 px-3 py-1 rounded-full">
+                  👨‍🍳 {order.assignedTo}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        ))}
+        
+        {prepOrders.length === 0 && (
+          <div className="col-span-full py-20 text-center text-slate-500">
+            No orders in Prep
+          </div>
+        )}
       </div>
     </div>
   )
