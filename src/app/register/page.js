@@ -1,4 +1,5 @@
 import { fetchDashboardData, updateStatusAction } from '../actions'
+import Link from 'next/link'
 import AdminDashboard from '../../components/AdminDashboard'
 import OrderCreationForm from '../../components/OrderCreationForm'
 import StaffScheduler from '../../components/StaffScheduler'
@@ -28,29 +29,37 @@ export default async function RegisterPage() {
             <SystemWarnings warnings={data.warnings} />
             <AuditLog actions={data.actions} />
 
-            <a
+            <Link
+              href="/order"
+              target="_blank"
+              className="inline-flex items-center gap-2 rounded-lg bg-pink-600 px-4 py-2 text-sm font-bold text-white shadow-md transition-all hover:bg-pink-700 hover:shadow-lg"
+            >
+              🍕 Public Order
+            </Link>
+
+            <Link
               href="/monitor"
               target="_blank"
               className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg"
             >
               📺 Monitor
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/kitchen"
               target="_blank"
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg"
             >
               👨‍🍳 Chef
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/expo"
               target="_blank"
               className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow-md transition-all hover:bg-orange-700 hover:shadow-lg"
             >
               🔥 Expo
-            </a>
+            </Link>
 
             <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
               <span className="mr-1.5 h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
