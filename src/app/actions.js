@@ -126,18 +126,29 @@ export async function addWarningAction(phone, reason) {
 // Dashboard Query
 // --------------------
 export async function fetchDashboardData() {
-  const [orders, warnings, actions, employees] = await Promise.all([
-    getOrders(),
-    getWarnings(),
-    getActions(),
-    getEmployees(),
-  ])
+  try {
+    const [orders, warnings, actions, employees] = await Promise.all([
+      getOrders(),
+      getWarnings(),
+      getActions(),
+      getEmployees(),
+    ])
 
-  return {
-    orders: orders.map((o) => ({ ...o })),
-    warnings: warnings.map((w) => ({ ...w })),
-    actions: actions.map((a) => ({ ...a })),
-    employees: employees,
+    return {
+      orders: orders.map((o) => ({ ...o })),
+      warnings: warnings.map((w) => ({ ...w })),
+      actions: actions.map((a) => ({ ...a })),
+      employees: employees,
+    }
+  } catch (error) {
+    console.error('Failed to fetch dashboard data:', error)
+    // Return empty state to prevent page crash (e.g., if DB is missing on Vercel)
+    return {
+      orders: [],
+      warnings: [],
+      actions: [],
+      employees: [],
+    }
   }
 }
 
