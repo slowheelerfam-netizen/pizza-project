@@ -36,15 +36,23 @@ export class OrderService {
 
       const customerSnapshot = {
         customerId: null,
-        name: customerName || 'Walk-in',
+        name: (customerName && customerName.trim()) ? customerName.trim() : 'Walk-in',
         phone: customerPhone || null,
         type: type || 'PICKUP',
         address: address || null,
         isWalkIn: !customerName,
       }
 
+      // Calculate next display ID (1-50)
+      const lastOrder = await this.orders.findFirst({
+        orderBy: { createdAt: 'desc' },
+      })
+
+      const nextDisplayId = lastOrder ? (lastOrder.displayId % 50) + 1 : 1
+
       const order = {
         id: crypto.randomUUID(),
+        displayId: nextDisplayId,
         status: ORDER_STATUS.NEW,
         source,
         items,
@@ -107,13 +115,13 @@ export class OrderService {
     if (updates.customerSnapshot) {
       order.customerSnapshot = {
         ...order.customerSnapshot,
-        ...updates.customerSnapshot
+        ...updates.customerSnapshot,
       }
     }
-    
+
     if (updates.items) order.items = updates.items
     if (updates.totalPrice) order.totalPrice = updates.totalPrice
-    
+
     order.updatedAt = new Date().toISOString()
 
     await this.orders.update(order)

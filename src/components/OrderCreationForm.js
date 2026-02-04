@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { createOrderAction, checkCustomerWarning } from '../app/actions'
-import { MENU_ITEMS, PIZZA_SIZES, CRUST_TYPES, TOPPINGS } from '../types/models'
+import { MENU_ITEMS } from '../types/models'
+import PizzaBuilderModal from './PizzaBuilderModal'
 
 export default function OrderCreationForm() {
   // Cart state
@@ -24,15 +25,6 @@ export default function OrderCreationForm() {
   // Validation State
   const [validationError, setValidationError] = useState(null)
 
-  // Current Item Builder State
-  const [selectedPizza, setSelectedPizza] = useState(MENU_ITEMS[0])
-  const [selectedSize, setSelectedSize] = useState(PIZZA_SIZES.MEDIUM)
-  const [selectedCrust, setSelectedCrust] = useState(CRUST_TYPES.ORIGINAL)
-  const [selectedToppings, setSelectedToppings] = useState(
-    new Set(MENU_ITEMS[0].defaultToppings)
-  )
-  const [itemNotes, setItemNotes] = useState('') // New Notes field
-
   // Form Submission State
   const [lastResult, setLastResult] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -45,10 +37,10 @@ export default function OrderCreationForm() {
       return { valid: false, message: 'Please enter a phone number.' }
 
     const digitsOnly = customerPhone.replace(/\D/g, '')
-    if (digitsOnly.length < 7)
+    if (digitsOnly.length < 10)
       return {
         valid: false,
-        message: 'Phone number must be at least 7 digits.',
+        message: 'Phone number must be at least 10 digits.',
       }
 
     if (orderType === 'DELIVERY' && !address)
@@ -66,10 +58,9 @@ export default function OrderCreationForm() {
     const { valid, message } = getValidationResult()
     if (valid) {
       setValidationError(null)
-      openModal()
+      setIsModalOpen(true)
     } else {
       setValidationError(message)
-      // User requested alert box/lightweight method
       alert(message)
     }
   }
@@ -77,7 +68,6 @@ export default function OrderCreationForm() {
   const handlePhoneBlur = async () => {
     if (!customerPhone || customerPhone.length < 3) return
 
-    // Reset warning state before checking
     setWarning(null)
     setOverrideWarning(false)
 
@@ -87,76 +77,7 @@ export default function OrderCreationForm() {
     }
   }
 
-  // Calculate price for the current item being built
-  const calculateItemPrice = (pizza, size, crust, toppingsSet) => {
-    let price = pizza.basePrice
-
-    // Add topping prices (only charge for non-default toppings for simplicity, or all toppings?)
-    // Reverting to: Charge for ALL toppings to be safe/profitable, or strictly extra?
-    // Let's stick to the previous logic: charge if not in default, but since we reset defaults...
-    // Actually, simple model: Base price includes defaults. Any toppings added add cost?
-    // Let's just charge for every topping selected for now to be simple and robust,
-    // OR: Assume base price covers everything initially selected.
-    // Let's stick to: Base Price + Toppings Price (if not default) + Crust Price * Size Multiplier.
-
-    toppingsSet.forEach((toppingId) => {
-      const topping = Object.values(TOPPINGS).find((t) => t.id === toppingId)
-      if (topping && !pizza.defaultToppings.includes(toppingId)) {
-        price += topping.price
-      }
-    })
-
-    price += crust.price
-    price *= size.priceMultiplier
-
-    return parseFloat(price.toFixed(2))
-  }
-
-  const currentItemPrice = calculateItemPrice(
-    selectedPizza,
-    selectedSize,
-    selectedCrust,
-    selectedToppings
-  )
-
-  const toggleTopping = (toppingId) => {
-    const newToppings = new Set(selectedToppings)
-    if (newToppings.has(toppingId)) {
-      newToppings.delete(toppingId)
-    } else {
-      newToppings.add(toppingId)
-    }
-    setSelectedToppings(newToppings)
-  }
-
-  const handlePizzaChange = (pizza) => {
-    setSelectedPizza(pizza)
-    setSelectedToppings(new Set(pizza.defaultToppings))
-  }
-
-  const openModal = () => {
-    // Reset builder state
-    setSelectedPizza(MENU_ITEMS[0])
-    setSelectedSize(PIZZA_SIZES.MEDIUM)
-    setSelectedCrust(CRUST_TYPES.ORIGINAL)
-    setSelectedToppings(new Set(MENU_ITEMS[0].defaultToppings))
-    setItemNotes('')
-    setIsModalOpen(true)
-  }
-
-  const addItemToOrder = () => {
-    const item = {
-      id: Date.now(),
-      name: selectedPizza.name,
-      size: selectedSize.label,
-      crust: selectedCrust.label,
-      toppings: Array.from(selectedToppings).map(
-        (id) => Object.values(TOPPINGS).find((t) => t.id === id)?.label
-      ),
-      price: currentItemPrice,
-      notes: itemNotes,
-      details: `${selectedSize.label} | ${selectedCrust.label}`,
-    }
+  const handleAddItem = (item) => {
     setItems([...items, item])
     setIsModalOpen(false)
   }
@@ -168,6 +89,11 @@ export default function OrderCreationForm() {
   const cartTotal = items.reduce((sum, item) => sum + item.price, 0)
 
   async function handleSubmit() {
+    if (!customerName || !customerName.trim()) {
+      alert('CRITICAL: Customer Name is missing! Please enter a name.')
+      return
+    }
+
     setIsSubmitting(true)
     const formData = new FormData()
     formData.append('customerName', customerName)
@@ -188,7 +114,6 @@ export default function OrderCreationForm() {
       setCustomerPhone('(805)')
       setAddress('')
       setOrderType('PICKUP')
-      setItemNotes('')
     }
   }
 
@@ -229,7 +154,7 @@ export default function OrderCreationForm() {
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 onBlur={handlePhoneBlur}
                 type="tel"
-                placeholder="e.g. 555-0199"
+                placeholder="e.g. (805) 555-0199"
                 className={`w-full rounded-lg border px-4 py-2.5 text-gray-900 placeholder-gray-400 transition-all focus:ring-2 focus:outline-none ${
                   warning
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
@@ -486,197 +411,15 @@ export default function OrderCreationForm() {
         </div>
       )}
 
-      {/* MODAL OVERLAY */}
+      {/* REPLACED WITH COMPONENT */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                Add Item to Order
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="p-6">
-              {/* Pizza Builder Content */}
-              <div className="space-y-6">
-                <div>
-                  <label className="mb-3 block text-sm font-medium text-gray-700">
-                    Select Pizza
-                  </label>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {MENU_ITEMS.map((pizza) => (
-                      <button
-                        key={pizza.id}
-                        type="button"
-                        onClick={() => handlePizzaChange(pizza)}
-                        className={`flex flex-col items-start rounded-xl border p-3 text-left transition-all ${
-                          selectedPizza.id === pizza.id
-                            ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600'
-                            : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span
-                          className={`text-sm font-semibold ${selectedPizza.id === pizza.id ? 'text-indigo-900' : 'text-gray-900'}`}
-                        >
-                          {pizza.name}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          ${pizza.basePrice}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <label className="mb-3 block text-sm font-medium text-gray-700">
-                      Size
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.values(PIZZA_SIZES).map((size) => (
-                        <button
-                          key={size.id}
-                          type="button"
-                          onClick={() => setSelectedSize(size)}
-                          className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            selectedSize.id === size.id
-                              ? 'bg-indigo-600 text-white shadow-md'
-                              : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          {size.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-3 block text-sm font-medium text-gray-700">
-                      Crust
-                    </label>
-                    <select
-                      value={selectedCrust.id}
-                      onChange={(e) =>
-                        setSelectedCrust(
-                          Object.values(CRUST_TYPES).find(
-                            (c) => c.id === e.target.value
-                          )
-                        )
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-                    >
-                      {Object.values(CRUST_TYPES).map((crust) => (
-                        <option key={crust.id} value={crust.id}>
-                          {crust.label}{' '}
-                          {crust.price > 0 && `(+$${crust.price})`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-3 block text-sm font-medium text-gray-700">
-                    Toppings
-                    <span className="ml-2 text-xs font-normal text-gray-500">
-                      (Selected: {selectedToppings.size})
-                    </span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {Object.values(TOPPINGS).map((topping) => {
-                      const isSelected = selectedToppings.has(topping.id)
-                      return (
-                        <button
-                          key={topping.id}
-                          type="button"
-                          onClick={() => toggleTopping(topping.id)}
-                          className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-all ${
-                            isSelected
-                              ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                              : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                          }`}
-                        >
-                          <span>{topping.label}</span>
-                          {isSelected && (
-                            <svg
-                              className="h-4 w-4 text-indigo-600"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Important Notes */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Important Notes / Special Instructions
-                  </label>
-                  <textarea
-                    value={itemNotes}
-                    onChange={(e) => setItemNotes(e.target.value)}
-                    placeholder="e.g. Extra crispy, no onions, ranch dressing on side..."
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 border-t border-gray-100 bg-gray-50 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Total Price</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${currentItemPrice.toFixed(2)}
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={addItemToOrder}
-                    className="rounded-lg bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-                  >
-                    Add to Order
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PizzaBuilderModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onCancel={() => window.location.reload()}
+          onAdd={handleAddItem}
+          initialPizza={MENU_ITEMS[0]}
+        />
       )}
     </div>
   )

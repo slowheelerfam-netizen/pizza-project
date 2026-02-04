@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  displayId        Int         @default(0)
+  status           String      @default("NEW")
+  source           String      @default("CALL_IN")
+  totalPrice       Float
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  // Customer Snapshot
+  customerName     String?
+  customerPhone    String?
+  customerType     String      @default("PICKUP")
+  customerAddress  String?
+  isWalkIn         Boolean     @default(false)
+  assignedTo       String?     // Name of employee assigned
+  
+  items            OrderItem[]
+  notifications    Notification[]
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  name      String
+  size      String?
+  crust     String?
+  price     Float
+  quantity  Int      @default(1)
+  notes     String?
+  toppings  String   @default("[]") // JSON string
+}
+
+model Warning {
+  id               String   @id @default(uuid())
+  reason           String
+  isActive         Boolean  @default(true)
+  createdBy        String
+  createdAt        DateTime @default(now())
+  
+  // Target identifiers
+  targetPhone      String?
+  targetName       String?
+  targetPaymentId  String?
+}
+
+model AdminAction {
+  id               String   @id @default(uuid())
+  actionType       String
+  targetEntityType String
+  targetEntityId   String
+  payload          String   // JSON string
+  performedBy      String
+  performedAt      DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String
+  message   String
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Employee {
+  id        String   @id @default(uuid())
+  name      String
+  role      String   // 'Front Counter', 'Chef', 'Cook', 'Float'
+  isOnDuty  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

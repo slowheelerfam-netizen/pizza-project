@@ -1,14 +1,14 @@
 import { OrderService } from '../domain/orderService'
-import { FileOrderRepository } from '../infrastructure/repositories/FileOrderRepository'
-import { FileWarningRepository } from '../infrastructure/repositories/FileWarningRepository'
-import { FileAdminActionRepository } from '../infrastructure/repositories/FileAdminActionRepository'
-import { FileNotificationRepository } from '../infrastructure/repositories/FileNotificationRepository'
+import { PrismaOrderRepository } from '../infrastructure/repositories/PrismaOrderRepository'
+import { PrismaWarningRepository } from '../infrastructure/repositories/PrismaWarningRepository'
+import { PrismaAdminActionRepository } from '../infrastructure/repositories/PrismaAdminActionRepository'
+import { PrismaNotificationRepository } from '../infrastructure/repositories/PrismaNotificationRepository'
 
 // Instantiate Persistence Repositories
-const ordersRepository = new FileOrderRepository()
-const warningsRepository = new FileWarningRepository()
-const adminActionRepository = new FileAdminActionRepository()
-const notificationsRepository = new FileNotificationRepository()
+const ordersRepository = new PrismaOrderRepository()
+const warningsRepository = new PrismaWarningRepository()
+const adminActionRepository = new PrismaAdminActionRepository()
+const notificationsRepository = new PrismaNotificationRepository()
 
 // Instantiate the Singleton Service with Repositories
 export const orderService = new OrderService(

@@ -9,6 +9,71 @@ import {
   getActions,
 } from '../lib/services'
 
+import { prisma } from '../lib/prisma'
+
+// --------------------
+// Employee / Staff Management
+// --------------------
+export async function getEmployees() {
+  const employees = await prisma.employee.findMany({
+    orderBy: { name: 'asc' },
+  })
+  return employees
+}
+
+export async function addEmployeeAction(prevState, formData) {
+  try {
+    const name = formData.get('name')
+    const role = formData.get('role')
+
+    if (!name || !role) {
+      return { success: false, message: 'Missing fields' }
+    }
+
+    await prisma.employee.create({
+      data: {
+        name,
+        role,
+        isOnDuty: false,
+      },
+    })
+
+    revalidatePath(ROUTES.HOME)
+    revalidatePath('/kitchen')
+    return { success: true }
+  } catch (error) {
+    console.error('Add Employee Failed:', error)
+    return { success: false, message: 'Failed to add employee' }
+  }
+}
+
+export async function toggleEmployeeDutyAction(id, isOnDuty) {
+  try {
+    await prisma.employee.update({
+      where: { id },
+      data: { isOnDuty },
+    })
+    revalidatePath(ROUTES.HOME)
+    revalidatePath('/kitchen')
+    return { success: true }
+  } catch (error) {
+    return { success: false, message: error.message }
+  }
+}
+
+export async function deleteEmployeeAction(id) {
+  try {
+    await prisma.employee.delete({
+      where: { id },
+    })
+    revalidatePath(ROUTES.HOME)
+    revalidatePath('/kitchen')
+    return { success: true }
+  } catch (error) {
+    return { success: false, message: error.message }
+  }
+}
+
 // --------------------
 // Warning / Security
 // --------------------
@@ -61,16 +126,18 @@ export async function addWarningAction(phone, reason) {
 // Dashboard Query
 // --------------------
 export async function fetchDashboardData() {
-  const [orders, warnings, actions] = await Promise.all([
+  const [orders, warnings, actions, employees] = await Promise.all([
     getOrders(),
     getWarnings(),
     getActions(),
+    getEmployees(),
   ])
 
   return {
     orders: orders.map((o) => ({ ...o })),
     warnings: warnings.map((w) => ({ ...w })),
     actions: actions.map((a) => ({ ...a })),
+    employees: employees,
   }
 }
 
@@ -122,10 +189,25 @@ export async function createOrderAction(prevState, formData) {
 // --------------------
 // Status Updates
 // --------------------
-export async function updateStatusAction(orderId, newStatus) {
+export async function updateStatusAction(
+  orderId,
+  newStatus,
+  assignedTo = null
+) {
   try {
     await orderService.updateStatus(orderId, newStatus)
+
+    if (assignedTo) {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { assignedTo },
+      })
+    }
+
     revalidatePath(ROUTES.HOME)
+    revalidatePath('/kitchen')
+    revalidatePath('/monitor')
+
     return { success: true }
   } catch (error) {
     return { success: false, message: error.message }

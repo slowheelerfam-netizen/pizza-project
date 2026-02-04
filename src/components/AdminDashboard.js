@@ -1,22 +1,49 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ORDER_STATUS } from '../types/models'
 import { OVERRIDE_REASONS } from '../types/adminOverrideReasons'
 import OrderEditModal from './OrderEditModal'
 import React from 'react'
 
 export default function AdminDashboard({ orders }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(null)
   const [overrideOrder, setOverrideOrder] = useState(null)
   const [editingOrder, setEditingOrder] = useState(null)
-  const [expandedOrderId, setExpandedOrderId] = useState(null)
+  // Support multiple expanded rows
+  const [expandedOrderIds, setExpandedOrderIds] = useState(new Set())
   const [reason, setReason] = useState('')
   const [comment, setComment] = useState('')
 
+  // Toggle visibility for Logs
+  const [showLogs, setShowLogs] = useState(false)
+
+  // Auto-expand/collapse logic removed for default collapsed view
+  // const prevStatusesRef = React.useRef(new Map())
+
+  // React.useEffect(() => {
+  //   // Logic removed to keep orders collapsed by default
+  // }, [orders])
+
   const toggleExpand = (orderId) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId)
+    const nextIds = new Set(expandedOrderIds)
+    if (nextIds.has(orderId)) {
+      nextIds.delete(orderId)
+    } else {
+      nextIds.add(orderId)
+    }
+    setExpandedOrderIds(nextIds)
   }
+
+  // Poll for updates every 10 seconds to keep dashboard live
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh()
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [router])
 
   async function handleOverride(orderId, status, reason, comment) {
     setLoading(orderId)
@@ -37,7 +64,7 @@ export default function AdminDashboard({ orders }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* ===== Edit Order Modal ===== */}
       <OrderEditModal
         order={editingOrder}
@@ -127,207 +154,145 @@ export default function AdminDashboard({ orders }) {
         </div>
       )}
 
-      {/* ===== Orders Table ===== */}
-      <div className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-sm">
-        <div className="border-b border-indigo-100 bg-indigo-50/50 px-6 py-4">
-          <h2 className="text-lg font-bold text-indigo-900">
-            Active Orders Queue
-          </h2>
+      {/* ===== Orders Queue ===== */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 className="text-xl font-bold text-gray-900">Active Orders</h2>
+          <button
+            onClick={() => setShowLogs(!showLogs)}
+            className="text-sm font-medium text-gray-500 hover:text-gray-900"
+          >
+            {showLogs ? 'Hide Logs' : 'Show Logs & Warnings'}
+          </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                  ID / Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                  Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {orders.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="4"
-                    className="px-6 py-12 text-center text-gray-500"
+        <div className="divide-y divide-gray-100">
+          {orders.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No active orders
+            </div>
+          ) : (
+            orders.map((order) => {
+              const isExpanded = expandedOrderIds.has(order.id)
+              return (
+                <div
+                  key={order.id}
+                  className="bg-white transition-colors hover:bg-gray-50"
+                >
+                  {/* Summary Row */}
+                  <div
+                    className="flex cursor-pointer items-center justify-between p-4"
+                    onClick={() => toggleExpand(order.id)}
                   >
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-full font-bold text-white ${
+                          order.status === 'NEW'
+                            ? 'bg-blue-500'
+                            : order.status === 'CONFIRMED'
+                              ? 'bg-yellow-500'
+                              : order.status === 'IN_PREP'
+                                ? 'bg-orange-500'
+                                : 'bg-green-500'
+                        }`}
+                      >
+                        {order.displayId}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">
+                          {order.customerSnapshot.name || 'Walk-in'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {order.type} • {order.items.length} items
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          order.status === 'NEW'
+                            ? 'bg-blue-100 text-blue-700'
+                            : order.status === 'CONFIRMED'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : order.status === 'IN_PREP'
+                                ? 'bg-orange-100 text-orange-700'
+                                : 'bg-green-100 text-green-700'
+                        }`}
+                      >
+                        {order.status}
+                      </span>
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                        className={`h-5 w-5 text-gray-400 transition-transform ${
+                          isExpanded ? 'rotate-180' : ''
+                        }`}
                         fill="none"
                         viewBox="0 0 24 24"
-                        strokeWidth={1.5}
                         stroke="currentColor"
-                        className="h-8 w-8 text-gray-300"
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
                         />
                       </svg>
-                      <span className="font-medium">No active orders</span>
-                      <span className="text-xs">
-                        New orders will appear here
-                      </span>
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                orders.map((order) => (
-                  <React.Fragment key={order.id}>
-                    <tr
-                      className="group cursor-pointer hover:bg-gray-50/50"
-                      onClick={() => toggleExpand(order.id)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
-                          {order.customerSnapshot?.name ?? 'Walk-in customer'}
-                        </div>
-                        <div className="font-mono text-xs text-gray-400">
-                          #{order.id.slice(0, 8)}
-                        </div>
-                      </td>
+                  </div>
 
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            order.status === ORDER_STATUS.NEW
-                              ? 'bg-blue-100 text-blue-800'
-                              : order.status === ORDER_STATUS.CONFIRMED
-                                ? 'bg-purple-100 text-purple-800'
-                                : order.status === ORDER_STATUS.IN_PREP
-                                  ? 'bg-orange-100 text-orange-800'
-                                  : order.status === ORDER_STATUS.READY
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4 text-sm font-medium text-gray-700">
-                        ${order.totalPrice}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <button
-                            className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setEditingOrder(order)
-                            }}
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-100 bg-gray-50/50 p-4 pl-16">
+                      <div className="mb-4 space-y-2">
+                        {order.items.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="flex gap-2 text-sm text-gray-800"
                           >
-                            Edit
-                          </button>
-
-                          <button
-                            className="text-sm font-medium text-red-600 hover:text-red-900"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOverrideOrder(order)
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {expandedOrderId === order.id && (
-                      <tr className="bg-indigo-50/30">
-                        <td colSpan="4" className="px-6 py-4">
-                          <div className="rounded-lg border border-indigo-100 bg-white p-4 shadow-sm">
-                            <div className="mb-4 grid gap-4 md:grid-cols-2">
-                              <div>
-                                <h4 className="text-xs font-bold tracking-wider text-gray-500 uppercase">
-                                  Customer Details
-                                </h4>
-                                <p className="text-sm font-medium text-gray-900">
-                                  {order.customerSnapshot?.phone || 'No phone'}
-                                </p>
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-bold tracking-wider text-gray-500 uppercase">
-                                  Order Type
-                                </h4>
-                                <p className="text-sm font-medium text-gray-900">
-                                  {order.customerSnapshot?.type === 'DELIVERY'
-                                    ? '🚚 Delivery'
-                                    : '🛍️ Pickup'}
-                                </p>
-                                {order.customerSnapshot?.type ===
-                                  'DELIVERY' && (
-                                  <p className="text-sm text-gray-600">
-                                    {order.customerSnapshot?.address}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="border-t border-gray-100 pt-4">
-                              <div className="mb-2 flex items-center justify-between">
-                                <h4 className="text-xs font-bold tracking-wider text-gray-500 uppercase">
-                                  Order Items
-                                </h4>
-                                <button
-                                  className="rounded border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-bold text-indigo-600 hover:bg-indigo-100 hover:text-indigo-800"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setEditingOrder(order)
-                                  }}
-                                >
-                                  Edit Order
-                                </button>
-                              </div>
-                              <ul className="space-y-3">
-                                {order.items?.map((item, idx) => (
-                                  <li
-                                    key={idx}
-                                    className="flex flex-col gap-1 rounded-md bg-gray-50 p-2 text-sm"
-                                  >
-                                    <div className="flex items-center justify-between font-medium text-gray-900">
-                                      <span>
-                                        {item.name} ({item.size})
-                                      </span>
-                                      <span>${item.price.toFixed(2)}</span>
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      {item.crust} Crust •{' '}
-                                      {item.toppings?.join(', ') ||
-                                        'No toppings'}
-                                    </div>
-                                    {item.notes && (
-                                      <div className="mt-1 inline-block rounded border border-amber-100 bg-amber-50 px-1.5 py-0.5 text-xs font-bold text-amber-600">
-                                        Note: {item.notes}
-                                      </div>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
+                            <span className="font-bold">1x</span>
+                            <span>
+                              {item.name} ({item.size}) - {item.crust}{' '}
+                              {item.toppings.length > 0 &&
+                                `with ${item.toppings.join(', ')}`}
+                            </span>
                           </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))
-              )}
-            </tbody>
-          </table>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditingOrder(order)
+                          }}
+                          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit Order
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOverrideOrder(order)
+                          }}
+                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-100"
+                        >
+                          Delete Order
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
         </div>
       </div>
+
+      {showLogs && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-500">
+          System Logs & Warnings are currently hidden to simplify the view.
+        </div>
+      )}
     </div>
   )
 }

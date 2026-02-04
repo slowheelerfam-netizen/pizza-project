@@ -1,5 +1,5 @@
 export const ROUTES = {
-  HOME: '/',
+  HOME: '/register',
   API: {
     ADMIN: {
       ORDERS: '/api/admin/orders',
