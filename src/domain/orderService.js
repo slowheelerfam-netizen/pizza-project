@@ -146,6 +146,7 @@ export class OrderService {
     adminId,
     orderId,
     newStatus,
+    reason,
     comment,
     customer = null
   ) {

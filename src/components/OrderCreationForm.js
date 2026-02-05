@@ -146,6 +146,7 @@ export default function OrderCreationForm() {
   }
 
   return (
+    <>
     <div className="overflow-hidden rounded-3xl border border-white/50 bg-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
       <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white/50 px-6 py-5">
         <h2 className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-xl font-bold text-transparent">
@@ -439,6 +440,7 @@ export default function OrderCreationForm() {
         </div>
       )}
 
+    </div>
       {/* REPLACED WITH COMPONENT */}
       {isModalOpen && (
         <PizzaBuilderModal
@@ -449,6 +451,6 @@ export default function OrderCreationForm() {
           initialPizza={MENU_ITEMS[0]}
         />
       )}
-    </div>
+    </>
   )
 }

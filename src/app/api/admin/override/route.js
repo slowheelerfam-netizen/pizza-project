@@ -4,7 +4,10 @@ import { orderService } from '../../../../lib/services'
 
 export async function POST(request) {
   try {
-    const { orderId, status } = await request.json()
+    const body = await request.json()
+    const { orderId, reason, comment } = body
+    // Support both 'status' and 'newStatus' from client
+    const status = body.status || body.newStatus
 
     if (!orderId || !status) {
       return NextResponse.json(
