@@ -159,7 +159,7 @@ export default function SystemWarnings({ warnings }) {
                 </form>
               )}
 
-              {warnings.length === 0 ? (
+              {mergedWarnings.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <p className="text-gray-500 italic">
                     No active system warnings
@@ -170,7 +170,7 @@ export default function SystemWarnings({ warnings }) {
                 </div>
               ) : (
                 <ul className="space-y-3">
-                  {warnings.map((w) => (
+                  {mergedWarnings.map((w) => (
                     <li
                       key={w.id}
                       className="flex flex-col gap-1 rounded-lg border border-red-100 bg-white p-3 shadow-sm"

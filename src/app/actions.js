@@ -102,10 +102,6 @@ export async function checkCustomerWarning(phone) {
 
 export async function addWarningAction(phone, reason) {
   try {
-    // We need to import the repository directly or expose a create method in service
-    // For now, let's look at how services.js exports things.
-    // It exports `orderService` which has `warnings` repo.
-
     const warning = {
       id: `warn-${Date.now()}`,
       reason: reason || 'Prank Caller',

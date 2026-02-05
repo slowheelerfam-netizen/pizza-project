@@ -100,7 +100,7 @@ export const demoStorage = {
       id: `emp-${Date.now()}`,
       name,
       role,
-      isOnDuty: false,
+      isOnDuty: true, // Default to TRUE for better UX
     }
     employees.push(newEmp)
     localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(employees))

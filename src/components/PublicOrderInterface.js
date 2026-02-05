@@ -87,7 +87,7 @@ export default function PublicOrderInterface() {
       // Simulate success
       setOrderResult({
         success: true,
-        message: 'Order created (Local Storage)',
+        message: 'Order created (Demo Mode - Saved to this device only)',
       })
       setIsSubmitting(false)
 

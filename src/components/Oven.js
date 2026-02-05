@@ -154,11 +154,13 @@ export default function Oven({ initialOrders, updateStatusAction }) {
         </div>
       )}
 
-      {/* DEBUG INFO */}
+      {/* DEBUG INFO - Hidden for Production */}
+      {false && (
       <div className="pointer-events-none fixed bottom-0 left-0 z-50 bg-black/80 p-2 text-xs text-white opacity-50">
         Debug: Total {orders.length} | Oven {ovenOrders.length} | Statuses:{' '}
         {orders.map((o) => o.status).join(', ')}
       </div>
+      )}
     </div>
   )
 }
