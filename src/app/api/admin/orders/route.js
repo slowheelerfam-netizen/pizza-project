@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaOrderRepository } from '@/app/infrastructure/repositories/PrismaOrderRepository'
+import { PrismaOrderRepository } from '../../../../infrastructure/repositories/PrismaOrderRepository'
 
 const repo = new PrismaOrderRepository()
 
