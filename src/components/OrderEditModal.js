@@ -184,26 +184,26 @@ export default function OrderEditModal({ order, isOpen, onClose }) {
             {/* Customer Details Section */}
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                <label className="mb-2 block text-sm font-bold text-gray-700">
                   Customer Name
                 </label>
                 <input
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   type="text"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                  className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                <label className="mb-2 block text-sm font-bold text-gray-700">
                   Phone Number
                 </label>
                 <input
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   type="tel"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                  className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                 />
               </div>
 
@@ -240,14 +240,14 @@ export default function OrderEditModal({ order, isOpen, onClose }) {
               {/* Address Field - Conditional */}
               {orderType === 'DELIVERY' && (
                 <div className="md:col-span-2">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  <label className="mb-2 block text-sm font-bold text-gray-700">
                     Delivery Address
                   </label>
                   <input
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     type="text"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                   />
                 </div>
               )}
@@ -333,14 +333,14 @@ export default function OrderEditModal({ order, isOpen, onClose }) {
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-500 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/40 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
@@ -501,7 +501,7 @@ export default function OrderEditModal({ order, isOpen, onClose }) {
                       rows={2}
                       value={itemNotes}
                       onChange={(e) => setItemNotes(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                      className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                       placeholder="e.g. Extra crispy, No onions, Cut in squares..."
                     />
                   </div>
@@ -509,7 +509,7 @@ export default function OrderEditModal({ order, isOpen, onClose }) {
                   <div className="pt-4">
                     <button
                       onClick={addItemToOrder}
-                      className="w-full rounded-lg bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-500"
+                      className="w-full rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/40"
                     >
                       Add to Order (${currentItemPrice.toFixed(2)})
                     </button>

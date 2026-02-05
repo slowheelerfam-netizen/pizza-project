@@ -146,12 +146,12 @@ export default function OrderCreationForm() {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl shadow-gray-200/50">
-      <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-        <h2 className="text-lg font-semibold text-gray-800">
+    <div className="overflow-hidden rounded-3xl border border-white/50 bg-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+      <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white/50 px-6 py-5">
+        <h2 className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-xl font-bold text-transparent">
           Create New Order
         </h2>
-        <p className="text-sm text-gray-500">
+        <p className="mt-1 text-sm font-medium text-gray-500">
           Start with customer details, then add items
         </p>
       </div>
@@ -161,20 +161,20 @@ export default function OrderCreationForm() {
           {/* Customer Details Section */}
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-bold text-gray-700">
                 Customer Name
               </label>
               <input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 type="text"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                 placeholder="e.g. John Doe"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-bold text-gray-700">
                 Phone Number
               </label>
               <input
@@ -183,14 +183,14 @@ export default function OrderCreationForm() {
                 onBlur={handlePhoneBlur}
                 type="tel"
                 placeholder="e.g. (805) 555-0199"
-                className={`w-full rounded-lg border px-4 py-2.5 text-gray-900 placeholder-gray-400 transition-all focus:ring-2 focus:outline-none ${
+                className={`w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:outline-none ${
                   warning
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20'
+                    ? 'ring-red-200 focus:ring-red-500/30'
+                    : 'ring-gray-200 focus:ring-indigo-500/30'
                 }`}
               />
               {warning && (
-                <div className="animate-in fade-in slide-in-from-top-2 mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
+                <div className="animate-in fade-in slide-in-from-top-2 mt-3 rounded-xl border border-red-100 bg-red-50/80 p-3 shadow-sm">
                   <div className="flex gap-3">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

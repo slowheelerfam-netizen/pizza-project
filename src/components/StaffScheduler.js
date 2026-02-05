@@ -60,28 +60,33 @@ export default function StaffScheduler({ employees: initialEmployees }) {
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">Staff Assignments</h2>
-        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 shadow-sm">
           {employees.filter((e) => Boolean(e.isOnDuty)).length} On Duty
         </span>
       </div>
 
       {/* Add New Staff */}
       <form onSubmit={handleAdd} className="mb-6 flex flex-col gap-3">
-        <input
-          type="text"
-          placeholder="Employee Name"
-          value={newEmployeeName}
-          onChange={(e) => setNewEmployeeName(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-        />
+        <div>
+          <label className="mb-2 block text-sm font-bold text-gray-700">
+            Employee Name
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Jane Smith"
+            value={newEmployeeName}
+            onChange={(e) => setNewEmployeeName(e.target.value)}
+            className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
+          />
+        </div>
         <div className="flex gap-3">
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+            className="flex-1 rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
           >
             {ROLES.map((role) => (
               <option key={role} value={role}>
@@ -92,7 +97,7 @@ export default function StaffScheduler({ employees: initialEmployees }) {
           <button
             type="submit"
             disabled={!newEmployeeName.trim() || isAdding}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/40 disabled:opacity-50 disabled:shadow-none"
           >
             Add
           </button>
@@ -107,25 +112,33 @@ export default function StaffScheduler({ employees: initialEmployees }) {
 
           return (
             <div key={role}>
-              <h3 className="mb-2 text-xs font-bold tracking-wider text-indigo-900 uppercase">
+              <h3 className="mb-3 text-xs font-extrabold tracking-wider text-indigo-900 uppercase">
                 {role}
               </h3>
               <div className="space-y-2">
                 {roleEmployees.map((emp) => (
                   <div
                     key={emp.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3"
+                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`h-2 w-2 rounded-full ${emp.isOnDuty ? 'bg-green-500' : 'bg-gray-300'}`}
+                        className={`h-3 w-3 rounded-full shadow-sm ${
+                          emp.isOnDuty
+                            ? 'bg-green-500 ring-2 ring-green-200'
+                            : 'bg-gray-300'
+                        }`}
                       />
                       <span
-                        className={`font-medium ${emp.isOnDuty ? 'text-gray-900' : 'text-gray-700'}`}
+                        className={`font-bold ${
+                          emp.isOnDuty ? 'text-gray-900' : 'text-gray-600'
+                        }`}
                       >
                         {emp.name}{' '}
                         {emp.isOnDuty && (
-                          <span className="ml-1 text-green-600">(On Duty)</span>
+                          <span className="ml-1 text-xs font-extrabold text-green-700">
+                            (Active)
+                          </span>
                         )}
                       </span>
                     </div>

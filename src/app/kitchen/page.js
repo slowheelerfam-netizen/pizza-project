@@ -12,10 +12,10 @@ export default async function ChefPage() {
   )
 
   return (
-    <main className="min-h-screen bg-white p-6">
+    <main className="min-h-screen bg-slate-900 p-6">
       <div className="mx-auto max-w-[1600px]">
-        <header className="mb-8 flex items-center justify-between border-b border-gray-100 pb-6">
-          <h1 className="text-4xl font-black tracking-tight text-gray-900">
+        <header className="mb-8 flex items-center justify-between border-b border-white/10 pb-6">
+          <h1 className="text-4xl font-black tracking-tight text-white">
             👨‍🍳 Chef
           </h1>
           <div className="flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 font-bold text-green-700">

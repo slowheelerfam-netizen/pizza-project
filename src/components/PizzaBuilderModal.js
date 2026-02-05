@@ -236,14 +236,14 @@ export default function PizzaBuilderModal({
 
             {/* Notes */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-bold text-gray-700">
                 Special Instructions
               </label>
               <textarea
                 value={itemNotes}
                 onChange={(e) => setItemNotes(e.target.value)}
                 placeholder="e.g. Extra crispy, no onions, ranch dressing on side..."
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                 rows={3}
               />
             </div>
@@ -253,7 +253,7 @@ export default function PizzaBuilderModal({
         <div className="sticky bottom-0 border-t border-gray-100 bg-gray-50 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Price</p>
+              <p className="text-sm font-bold text-gray-500">Total Price</p>
               <p className="text-2xl font-bold text-gray-900">
                 ${currentPrice.toFixed(2)}
               </p>
@@ -261,13 +261,13 @@ export default function PizzaBuilderModal({
             <div className="flex gap-3">
               <button
                 onClick={onCancel || onClose}
-                className="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddToOrder}
-                className="rounded-lg bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                className="rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/40"
               >
                 Add to Order
               </button>

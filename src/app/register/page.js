@@ -9,18 +9,19 @@ import AuditLog from '../../components/AuditLog'
 export const dynamic = 'force-dynamic'
 
 export default async function RegisterPage() {
+  // Force rebuild
   const data = await fetchDashboardData()
 
   return (
-    <main className="min-h-screen bg-gray-50/50 p-6 md:p-10">
+    <main className="min-h-screen bg-gradient-to-br from-slate-900 to-gray-900 p-6 md:p-10">
       <div className="mx-auto max-w-[1600px] space-y-8">
         {/* Header Section */}
-        <header className="flex flex-col items-center justify-between gap-6 border-b border-gray-200 pb-6 lg:flex-row">
+        <header className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-white/10 bg-white/10 p-6 shadow-xl backdrop-blur-xl lg:flex-row">
           <div className="text-center lg:text-left">
-            <h1 className="text-4xl font-extrabold tracking-tight text-indigo-900">
+            <h1 className="bg-gradient-to-r from-indigo-400 to-indigo-200 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent drop-shadow-sm">
               Pizza Kitchen
             </h1>
-            <p className="mt-2 text-lg font-medium text-indigo-600/80">
+            <p className="mt-2 text-lg font-medium text-indigo-100/60">
               Manage orders, track status, and view alerts
             </p>
           </div>
@@ -29,33 +30,45 @@ export default async function RegisterPage() {
             <Link
               href="/order"
               target="_blank"
-              className="inline-flex items-center gap-2 rounded-lg bg-pink-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-pink-700 hover:shadow-lg"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-pink-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40 active:translate-y-0 active:shadow-md"
             >
-              🍕 Public Order
+              <span className="relative z-10 flex items-center gap-2">
+                🍕 Public Order
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
 
             <Link
               href="/monitor"
               target="_blank"
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40 active:translate-y-0 active:shadow-md"
             >
-              📺 Monitor
+              <span className="relative z-10 flex items-center gap-2">
+                📺 Monitor
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
 
             <Link
               href="/kitchen"
               target="_blank"
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/40 active:translate-y-0 active:shadow-md"
             >
-              👨‍🍳 Chef
+              <span className="relative z-10 flex items-center gap-2">
+                👨‍🍳 Chef
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
 
             <Link
               href="/expo"
               target="_blank"
-              className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-orange-700 hover:shadow-lg"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/40 active:translate-y-0 active:shadow-md"
             >
-              🔥 Expo
+              <span className="relative z-10 flex items-center gap-2">
+                🔥 Expo
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
           </div>
 
@@ -74,7 +87,7 @@ export default async function RegisterPage() {
           {/* Right Column */}
           <section className="lg:col-span-8">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="flex items-center gap-2 text-2xl font-bold text-indigo-900">
+              <h2 className="flex items-center gap-2 text-2xl font-bold text-white">
                 <span className="text-2xl">📊</span> Live Dashboard
               </h2>
 

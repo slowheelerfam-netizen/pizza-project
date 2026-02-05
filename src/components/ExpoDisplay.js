@@ -37,9 +37,9 @@ export default function ExpoDisplay({ initialOrders, updateStatusAction }) {
     )
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <header className="mb-8 flex items-center justify-between border-b border-gray-200 pb-6">
-        <h1 className="text-4xl font-black tracking-tight text-gray-900">
+    <div className="min-h-screen bg-transparent p-8">
+      <header className="mb-8 flex items-center justify-between border-b border-white/10 pb-6">
+        <h1 className="text-4xl font-black tracking-tight text-white">
           🔥 EXPO: OVEN STATION
         </h1>
         <div className="rounded-full bg-orange-100 px-4 py-2 font-mono text-xl text-orange-800">

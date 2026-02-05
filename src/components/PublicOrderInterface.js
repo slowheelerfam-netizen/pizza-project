@@ -8,8 +8,10 @@ import PizzaBuilderModal from './PizzaBuilderModal'
 export default function PublicOrderInterface() {
   const [cart, setCart] = useState([])
   const [isBuilderOpen, setIsBuilderOpen] = useState(false)
-  const [selectedPizzaForBuilder, setSelectedPizzaForBuilder] = useState(MENU_ITEMS[0])
-  
+  const [selectedPizzaForBuilder, setSelectedPizzaForBuilder] = useState(
+    MENU_ITEMS[0]
+  )
+
   // Checkout State
   const [isCheckoutMode, setIsCheckoutMode] = useState(false)
   const [customerName, setCustomerName] = useState('')
@@ -38,7 +40,7 @@ export default function PublicOrderInterface() {
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     const formData = new FormData()
     formData.append('customerName', customerName)
     formData.append('customerPhone', customerPhone)
@@ -50,7 +52,7 @@ export default function PublicOrderInterface() {
     const result = await createOrderAction(null, formData)
     setOrderResult(result)
     setIsSubmitting(false)
-    
+
     if (result.success) {
       setCart([])
       setCustomerName('')
@@ -65,13 +67,25 @@ export default function PublicOrderInterface() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
         <div className="rounded-full bg-green-100 p-6 text-green-600">
-          <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <svg
+            className="h-16 w-16"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
         <h2 className="mt-6 text-3xl font-bold text-gray-900">Order Placed!</h2>
-        <p className="mt-2 text-lg text-gray-600">We're firing up the oven. Your pizza will be ready soon.</p>
-        <button 
+        <p className="mt-2 text-lg text-gray-600">
+          We're firing up the oven. Your pizza will be ready soon.
+        </p>
+        <button
           onClick={() => setOrderResult(null)}
           className="mt-8 rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white hover:bg-indigo-700"
         >
@@ -84,13 +98,15 @@ export default function PublicOrderInterface() {
   return (
     <div className="grid gap-8 lg:grid-cols-3">
       {/* LEFT COLUMN: MENU */}
-      <div className={`lg:col-span-2 ${isCheckoutMode ? 'hidden lg:block lg:opacity-50 lg:pointer-events-none' : ''}`}>
+      <div
+        className={`lg:col-span-2 ${isCheckoutMode ? 'hidden lg:pointer-events-none lg:block lg:opacity-50' : ''}`}
+      >
         <h2 className="mb-6 text-2xl font-bold text-gray-800">Our Menu</h2>
         <div className="grid gap-6 sm:grid-cols-2">
           {MENU_ITEMS.map((pizza) => (
-            <div 
+            <div
               key={pizza.id}
-              className="group relative overflow-hidden rounded-2xl bg-white shadow-md transition-all hover:shadow-xl hover:-translate-y-1"
+              className="group relative overflow-hidden rounded-2xl bg-white shadow-md transition-all hover:-translate-y-1 hover:shadow-xl"
             >
               <div className="aspect-video w-full bg-gray-200 object-cover">
                 {/* Placeholder for Pizza Image */}
@@ -100,15 +116,22 @@ export default function PublicOrderInterface() {
               </div>
               <div className="p-5">
                 <div className="flex items-start justify-between">
-                  <h3 className="text-xl font-bold text-gray-900">{pizza.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {pizza.name}
+                  </h3>
                   <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700">
                     ${pizza.basePrice}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">{pizza.description}</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  {pizza.description}
+                </p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {pizza.defaultToppings.map(t => (
-                    <span key={t} className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                  {pizza.defaultToppings.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                    >
                       {t}
                     </span>
                   ))}
@@ -130,10 +153,10 @@ export default function PublicOrderInterface() {
         <div className="sticky top-6 rounded-2xl bg-white p-6 shadow-xl ring-1 ring-gray-100">
           {!isCheckoutMode ? (
             <>
-              <h2 className="mb-4 text-xl font-bold text-gray-900 flex items-center gap-2">
+              <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-gray-900">
                 <span>🛒</span> Your Order
               </h2>
-              
+
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400">
                   <p>Your cart is empty.</p>
@@ -143,19 +166,25 @@ export default function PublicOrderInterface() {
                 <div className="space-y-4">
                   <ul className="divide-y divide-gray-100">
                     {cart.map((item, idx) => (
-                      <li key={idx} className="py-3 flex justify-between group">
+                      <li key={idx} className="group flex justify-between py-3">
                         <div>
-                          <p className="font-semibold text-gray-900">{item.name}</p>
-                          <p className="text-xs text-gray-500">{item.size} | {item.crust}</p>
-                          <p className="text-xs text-gray-400 truncate max-w-[150px]">
+                          <p className="font-semibold text-gray-900">
+                            {item.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {item.size} | {item.crust}
+                          </p>
+                          <p className="max-w-[150px] truncate text-xs text-gray-400">
                             {item.toppings.join(', ')}
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="font-medium text-gray-900">${item.price.toFixed(2)}</span>
-                          <button 
+                          <span className="font-medium text-gray-900">
+                            ${item.price.toFixed(2)}
+                          </span>
+                          <button
                             onClick={() => removeFromCart(idx)}
-                            className="text-xs text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="text-xs text-red-500 opacity-0 transition-opacity group-hover:opacity-100"
                           >
                             Remove
                           </button>
@@ -163,7 +192,7 @@ export default function PublicOrderInterface() {
                       </li>
                     ))}
                   </ul>
-                  
+
                   <div className="border-t border-gray-100 pt-4">
                     <div className="flex items-center justify-between text-lg font-bold text-gray-900">
                       <span>Total</span>
@@ -181,11 +210,14 @@ export default function PublicOrderInterface() {
               )}
             </>
           ) : (
-            <form onSubmit={handleCheckoutSubmit} className="space-y-4 animate-in slide-in-from-right-4">
-              <div className="flex items-center justify-between mb-2">
+            <form
+              onSubmit={handleCheckoutSubmit}
+              className="animate-in slide-in-from-right-4 space-y-4"
+            >
+              <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">Checkout</h2>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsCheckoutMode(false)}
                   className="text-sm text-indigo-600 hover:text-indigo-800"
                 >
@@ -194,30 +226,36 @@ export default function PublicOrderInterface() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Name
+                </label>
                 <input
                   required
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Phone</label>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Phone
+                </label>
                 <input
                   required
                   type="tel"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="(805) 555-0123"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Order Type</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Order Type
+                </label>
                 <div className="mt-1 flex gap-4">
                   <label className="flex items-center gap-2">
                     <input
@@ -244,19 +282,21 @@ export default function PublicOrderInterface() {
 
               {orderType === 'DELIVERY' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Delivery Address</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Delivery Address
+                  </label>
                   <input
                     required
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                   />
                 </div>
               )}
 
-              <div className="border-t border-gray-100 pt-4 mt-6">
-                <div className="flex justify-between mb-4 text-sm text-gray-500">
+              <div className="mt-6 border-t border-gray-100 pt-4">
+                <div className="mb-4 flex justify-between text-sm text-gray-500">
                   <span>Items ({cart.length})</span>
                   <span>${cartTotal.toFixed(2)}</span>
                 </div>
@@ -265,7 +305,9 @@ export default function PublicOrderInterface() {
                   disabled={isSubmitting}
                   className="w-full rounded-lg bg-green-600 py-3 font-bold text-white shadow-lg shadow-green-200 transition-all hover:bg-green-700 disabled:opacity-70"
                 >
-                  {isSubmitting ? 'Placing Order...' : `Pay $${cartTotal.toFixed(2)}`}
+                  {isSubmitting
+                    ? 'Placing Order...'
+                    : `Pay $${cartTotal.toFixed(2)}`}
                 </button>
               </div>
             </form>

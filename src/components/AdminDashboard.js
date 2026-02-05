@@ -122,17 +122,17 @@ export default function AdminDashboard({ orders: initialOrders }) {
 
   // Helper to render an order card (Minimal: Name + Status)
   const renderOrderCard = (order) => {
-    let statusColor = 'bg-gray-100 text-gray-800'
+    let statusColor = 'bg-white/10 text-white/70'
     let statusLabel = 'NEW'
 
     if (order.status === 'IN_PREP') {
-      statusColor = 'bg-blue-100 text-blue-800'
+      statusColor = 'bg-blue-500/20 text-blue-200'
       statusLabel = 'PREP'
     } else if (order.status === 'OVEN') {
-      statusColor = 'bg-orange-100 text-orange-800'
+      statusColor = 'bg-orange-500/20 text-orange-200'
       statusLabel = 'OVEN'
     } else if (order.status === 'READY') {
-      statusColor = 'bg-green-100 text-green-800'
+      statusColor = 'bg-green-500/20 text-green-200'
       statusLabel = 'READY'
     }
 
@@ -140,18 +140,18 @@ export default function AdminDashboard({ orders: initialOrders }) {
       <div
         key={order.id}
         onClick={() => setSelectedOrder(order)}
-        className={`mb-2 cursor-pointer rounded-lg border p-3 shadow-sm transition-all hover:shadow-md ${
+        className={`mb-2 cursor-pointer rounded-xl border p-3 shadow-lg backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-xl ${
           selectedOrder?.id === order.id
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-200 bg-white'
+            ? 'border-indigo-500 bg-indigo-500/20 ring-1 ring-indigo-500/50'
+            : 'border-white/10 bg-white/5 hover:bg-white/10'
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className="truncate font-bold text-gray-900">
+          <span className="truncate font-bold text-white">
             {order.customerSnapshot.name || 'Walk-in'}
           </span>
           <span
-            className={`rounded px-2 py-0.5 text-xs font-bold ${statusColor}`}
+            className={`rounded-lg px-2 py-0.5 text-xs font-bold ${statusColor}`}
           >
             {statusLabel}
           </span>
@@ -271,11 +271,11 @@ export default function AdminDashboard({ orders: initialOrders }) {
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-bold text-gray-900">
+                <label className="mb-2 block text-sm font-bold text-gray-700">
                   Reason for Deletion
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-300 p-2.5 font-medium text-gray-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                  className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-red-500/30 focus:outline-none"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                 >
@@ -289,11 +289,11 @@ export default function AdminDashboard({ orders: initialOrders }) {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-bold text-gray-900">
+                <label className="mb-2 block text-sm font-bold text-gray-700">
                   Comment {reason === 'OTHER' && '(required)'}
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-300 p-2.5 font-medium text-gray-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                  className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-red-500/30 focus:outline-none"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Add details..."
@@ -303,7 +303,7 @@ export default function AdminDashboard({ orders: initialOrders }) {
 
             <div className="mt-8 flex gap-3">
               <button
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 disabled:opacity-50"
+                className="flex-1 rounded-xl bg-red-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-500/40 disabled:opacity-50"
                 disabled={
                   !reason ||
                   (reason === 'OTHER' && !comment) ||
@@ -324,7 +324,7 @@ export default function AdminDashboard({ orders: initialOrders }) {
               </button>
 
               <button
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="flex-1 rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
                 onClick={() => {
                   setOverrideOrder(null)
                   setReason('')
@@ -342,15 +342,18 @@ export default function AdminDashboard({ orders: initialOrders }) {
       <div className="flex flex-1 gap-4 overflow-hidden">
         {/* COLUMN 1: NEW */}
         <div
-          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl transition-all duration-500"
           style={{ flex: newFlex }}
         >
-          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 className="text-xl font-bold text-gray-900">New</h2>
+          <div className="border-b border-white/10 bg-white/5 px-6 py-4">
+            <h2 className="text-xl font-bold text-white">Incoming</h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {newOrders.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">No new orders</div>
+              <div className="flex h-full flex-col items-center justify-center text-center opacity-50">
+                <div className="mb-2 text-4xl">🍕</div>
+                <p className="font-medium text-white/50">No new orders</p>
+              </div>
             ) : (
               newOrders.map(renderOrderCard)
             )}
@@ -359,15 +362,18 @@ export default function AdminDashboard({ orders: initialOrders }) {
 
         {/* COLUMN 2: PREP */}
         <div
-          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl transition-all duration-500"
           style={{ flex: prepFlex }}
         >
-          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 className="text-xl font-bold text-gray-900">Prep</h2>
+          <div className="border-b border-white/10 bg-white/5 px-6 py-4">
+            <h2 className="text-xl font-bold text-white">Prep</h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {prepOrders.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">Prep is clear</div>
+              <div className="flex h-full flex-col items-center justify-center text-center opacity-50">
+                <div className="mb-2 text-4xl">👨‍🍳</div>
+                <p className="font-medium text-white/50">Prep station clear</p>
+              </div>
             ) : (
               prepOrders.map(renderOrderCard)
             )}
@@ -376,15 +382,18 @@ export default function AdminDashboard({ orders: initialOrders }) {
 
         {/* COLUMN 3: OVEN */}
         <div
-          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl transition-all duration-500"
           style={{ flex: ovenFlex }}
         >
-          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 className="text-xl font-bold text-gray-900">Oven</h2>
+          <div className="border-b border-white/10 bg-white/5 px-6 py-4">
+            <h2 className="text-xl font-bold text-white">Oven</h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {ovenOrders.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">Oven is empty</div>
+              <div className="flex h-full flex-col items-center justify-center text-center opacity-50">
+                <div className="mb-2 text-4xl">🔥</div>
+                <p className="font-medium text-white/50">Oven is empty</p>
+              </div>
             ) : (
               ovenOrders.map(renderOrderCard)
             )}
@@ -393,22 +402,23 @@ export default function AdminDashboard({ orders: initialOrders }) {
 
         {/* COLUMN 4: READY */}
         <div
-          className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-500"
+          className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl transition-all duration-500"
           style={{ flex: readyFlex }}
         >
-          <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <h2 className="text-xl font-bold text-gray-900">Ready & Done</h2>
+          <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-6 py-4">
+            <h2 className="text-xl font-bold text-white">Ready & Done</h2>
             <button
               onClick={() => setShowLogs(!showLogs)}
-              className="text-sm font-medium text-gray-500 hover:text-gray-900"
+              className="rounded-lg px-2 py-1 text-sm font-medium text-white/50 hover:bg-white/10 hover:text-white"
             >
               {showLogs ? 'Hide Logs' : 'Show Logs'}
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {readyOrders.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                No active/past orders
+              <div className="flex h-full flex-col items-center justify-center text-center opacity-50">
+                <div className="mb-2 text-4xl">✅</div>
+                <p className="font-medium text-white/50">No ready orders</p>
               </div>
             ) : (
               readyOrders.map(renderOrderCard)
@@ -418,7 +428,7 @@ export default function AdminDashboard({ orders: initialOrders }) {
       </div>
 
       {showLogs && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-500">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-white/50">
           System Logs & Warnings are currently hidden.
         </div>
       )}

@@ -13,6 +13,7 @@ export default function ChefDisplay({
 }) {
   const router = useRouter()
   const [orders, setOrders] = useState(initialOrders)
+  const [mergedEmployees, setMergedEmployees] = useState(employees)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [assignmentMap, setAssignmentMap] = useState({}) // Local state for assignments in modal
 
@@ -20,17 +21,18 @@ export default function ChefDisplay({
   useEffect(() => {
     // Merge server orders with local storage orders
     const localOrders = demoStorage.getOrders()
-    // Create a map by ID to merge
     const orderMap = new Map()
-
-    // Add server orders first
     initialOrders.forEach((o) => orderMap.set(o.id, o))
-
-    // Add/Overwrite with local orders (local takes precedence if updated more recently, but for simplicity just add/overwrite)
     localOrders.forEach((o) => orderMap.set(o.id, o))
-
     setOrders(Array.from(orderMap.values()))
-  }, [initialOrders])
+
+    // Merge server employees with local storage employees
+    const localEmployees = demoStorage.getEmployees()
+    const employeeMap = new Map()
+    employees.forEach((e) => employeeMap.set(e.id, e))
+    localEmployees.forEach((e) => employeeMap.set(e.id, e))
+    setMergedEmployees(Array.from(employeeMap.values()))
+  }, [initialOrders, employees])
 
   // Poll for updates every 2 seconds
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function ChefDisplay({
   const ovenFlex = Math.max(1, ovenOrders.length)
   const readyFlex = Math.max(1, readyOrders.length)
 
-  const availableStaff = employees.filter((e) => Boolean(e.isOnDuty))
+  const availableStaff = mergedEmployees.filter((e) => Boolean(e.isOnDuty))
 
   // Helper to render an order card (Minimal: Name + Status)
   const renderOrderCard = (order) => {
@@ -159,14 +161,14 @@ export default function ChefDisplay({
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50 transition-all duration-500">
+    <div className="flex h-[calc(100vh-64px)] gap-6 bg-transparent p-6 transition-all duration-500">
       {/* COLUMN 1: NEW */}
       <div
-        className="flex flex-col border-r border-gray-200 bg-white transition-all duration-500"
+        className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md transition-all duration-500"
         style={{ flex: newFlex }}
       >
-        <div className="border-b border-gray-100 p-4">
-          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+        <div className="border-b border-white/10 bg-white/5 p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-white">
             <span>🔔</span> NEW
             <span className="rounded-full bg-blue-100 px-2 py-0.5 text-sm font-medium text-blue-800">
               {newOrders.length}
@@ -183,11 +185,11 @@ export default function ChefDisplay({
 
       {/* COLUMN 2: PREP */}
       <div
-        className="flex flex-col border-r border-gray-200 bg-white transition-all duration-500"
+        className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md transition-all duration-500"
         style={{ flex: prepFlex }}
       >
-        <div className="border-b border-gray-100 p-4">
-          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+        <div className="border-b border-white/10 bg-white/5 p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-white">
             <span>🔪</span> PREP
             <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-sm font-medium text-indigo-800">
               {prepOrders.length}
@@ -204,11 +206,11 @@ export default function ChefDisplay({
 
       {/* COLUMN 3: OVEN */}
       <div
-        className="flex flex-col border-r border-gray-200 bg-white transition-all duration-500"
+        className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md transition-all duration-500"
         style={{ flex: ovenFlex }}
       >
-        <div className="border-b border-gray-200 bg-white p-4">
-          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+        <div className="border-b border-white/10 bg-white/5 p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-white">
             <span>🔥</span> OVEN
             <span className="rounded-full bg-orange-100 px-2 py-0.5 text-sm font-medium text-orange-800">
               {ovenOrders.length}
@@ -225,11 +227,11 @@ export default function ChefDisplay({
 
       {/* COLUMN 4: READY */}
       <div
-        className="flex flex-col bg-gray-50 transition-all duration-500"
+        className="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md transition-all duration-500"
         style={{ flex: readyFlex }}
       >
-        <div className="border-b border-gray-200 bg-white p-4">
-          <h2 className="flex items-center gap-2 text-xl font-black text-gray-900">
+        <div className="border-b border-white/10 bg-white/5 p-4">
+          <h2 className="flex items-center gap-2 text-xl font-black text-white">
             <span>✅</span> READY
             <span className="rounded-full bg-green-100 px-2 py-0.5 text-sm font-medium text-green-800">
               {readyOrders.length}
@@ -298,7 +300,7 @@ export default function ChefDisplay({
                         [selectedOrder.id]: newAssignee,
                       }))
                     }}
-                    className="w-full rounded-lg border border-indigo-200 bg-white px-4 py-2 text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-gray-900 shadow-inner ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                   >
                     <option value="">-- Select Staff --</option>
                     {availableStaff.length === 0 && (

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { orderService } from '@/lib/services'
+import { orderService } from '../../../../lib/services'
 
 export async function POST(request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request) {
       )
     }
 
-    // Admin override ignores state transitions validation usually, 
+    // Admin override ignores state transitions validation usually,
     // but our service enforces it. For now, we use the standard update.
     const updatedOrder = await orderService.updateStatus(orderId, status)
 
