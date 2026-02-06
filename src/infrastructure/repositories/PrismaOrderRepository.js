@@ -27,27 +27,28 @@ export class PrismaOrderRepository {
   }
 
   async create(order) {
-    if (DEMO_MODE) {
-      throw new Error('Demo mode: order creation is disabled')
-    }
-
     const { id, items, customerSnapshot, ...rest } = order
+
+    const isDemo = DEMO_MODE === true
 
     const created = await prisma.order.create({
       data: {
         ...(id && { id }),
         displayId: rest.displayId,
         status: rest.status,
-        source: rest.source,
+        source: isDemo ? 'DEMO' : rest.source,
         totalPrice: rest.totalPrice,
         createdAt: rest.createdAt ? new Date(rest.createdAt) : undefined,
         updatedAt: rest.updatedAt ? new Date(rest.updatedAt) : undefined,
-        customerName: customerSnapshot?.name,
-        customerPhone: customerSnapshot?.phone,
+
+        customerName: isDemo ? 'Demo Customer' : customerSnapshot?.name,
+        customerPhone: isDemo ? '000-000-0000' : customerSnapshot?.phone,
         customerType: customerSnapshot?.type,
-        customerAddress: customerSnapshot?.address,
+        customerAddress: isDemo ? null : customerSnapshot?.address,
         isWalkIn: customerSnapshot?.isWalkIn || false,
+
         assignedTo: rest.assignedTo,
+
         items: {
           create: items.map((item) => ({
             name: item.name,
@@ -67,11 +68,7 @@ export class PrismaOrderRepository {
   }
 
   async update(order) {
-    if (DEMO_MODE) {
-      throw new Error('Demo mode: order updates are disabled')
-    }
-
-    const { id, items, customerSnapshot, ...rest } = order
+    const { id, ...rest } = order
 
     const updated = await prisma.order.update({
       where: { id },
@@ -95,7 +92,7 @@ export class PrismaOrderRepository {
       totalPrice: prismaOrder.totalPrice,
       createdAt: prismaOrder.createdAt.toISOString(),
       updatedAt: prismaOrder.updatedAt.toISOString(),
-      isNoContact: false,
+      isDemo: prismaOrder.source === 'DEMO',
       assignedTo: prismaOrder.assignedTo,
       customerSnapshot: {
         name: prismaOrder.customerName,
@@ -117,3 +114,4 @@ export class PrismaOrderRepository {
     }
   }
 }
+
