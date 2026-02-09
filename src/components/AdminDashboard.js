@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { demoStorage } from '../lib/demoStorage'
 import { ORDER_STATUS } from '../types/models'
-import { OVERRIDE_REASONS } from '../types/adminOverrideReasons'
+import { updateOrderDetailsAction } from '../app/actions'
 import OrderEditModal from './OrderEditModal'
 import React from 'react'
 
@@ -17,10 +17,35 @@ export default function AdminDashboard({ orders: initialOrders }) {
   const [editingOrder, setEditingOrder] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [expandedOrderIds, setExpandedOrderIds] = useState(new Set())
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [comment, setComment] = useState('')
 
-  const [showLogs, setShowLogs] = useState(false)
+  const handleMakePriority = async (orderId) => {
+    setLoading(orderId)
+    // Make it 24 hours older to ensure it's at the top of the list
+    const priorityTime = new Date(
+      Date.now() - 24 * 60 * 60 * 1000
+    ).toISOString()
+
+    const result = await updateOrderDetailsAction(orderId, {
+      createdAt: priorityTime,
+    })
+
+    if (result && result.success) {
+      // Update local storage
+      const order = orders.find((o) => o.id === orderId)
+      if (order) {
+        demoStorage.saveOrder({ ...order, createdAt: priorityTime })
+      }
+      router.refresh()
+    }
+
+    setLoading(null)
+    setSelectedOrder(null)
+  }
+
+  // ... (rest of the component)
 
   const toggleExpand = (orderId) => {
     const nextIds = new Set(expandedOrderIds)
@@ -178,9 +203,172 @@ export default function AdminDashboard({ orders: initialOrders }) {
 
   return (
     <div className="flex h-[calc(100vh-100px)] flex-col space-y-4">
-      {/* UI unchanged below */}
-      {/* ... remainder identical to previous version ... */}
+      <div className="grid flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-4">
+        {/* New Orders */}
+        <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-md">
+          <div className="border-b border-white/10 bg-white/5 p-3">
+            <h3 className="flex items-center gap-2 font-bold text-white">
+              <span>🔔</span> New
+              <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-xs text-blue-200">
+                {newOrders.length}
+              </span>
+            </h3>
+          </div>
+          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 flex-1 overflow-y-auto p-3">
+            {newOrders.map(renderOrderCard)}
+          </div>
+        </div>
+
+        {/* Prep */}
+        <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-md">
+          <div className="border-b border-white/10 bg-white/5 p-3">
+            <h3 className="flex items-center gap-2 font-bold text-white">
+              <span>👨‍🍳</span> Prep
+              <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-200">
+                {prepOrders.length}
+              </span>
+            </h3>
+          </div>
+          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 flex-1 overflow-y-auto p-3">
+            {prepOrders.map(renderOrderCard)}
+          </div>
+        </div>
+
+        {/* Oven */}
+        <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-md">
+          <div className="border-b border-white/10 bg-white/5 p-3">
+            <h3 className="flex items-center gap-2 font-bold text-white">
+              <span>🔥</span> Oven
+              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-xs text-orange-200">
+                {ovenOrders.length}
+              </span>
+            </h3>
+          </div>
+          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 flex-1 overflow-y-auto p-3">
+            {ovenOrders.map(renderOrderCard)}
+          </div>
+        </div>
+
+        {/* Ready */}
+        <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-md">
+          <div className="border-b border-white/10 bg-white/5 p-3">
+            <h3 className="flex items-center gap-2 font-bold text-white">
+              <span>✅</span> Ready
+              <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-200">
+                {readyOrders.length}
+              </span>
+            </h3>
+          </div>
+          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 flex-1 overflow-y-auto p-3">
+            {readyOrders.map(renderOrderCard)}
+          </div>
+        </div>
+      </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 p-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedOrder.customerSnapshot.name}
+                </h2>
+                <p className="text-gray-500">
+                  Order #{selectedOrder.displayId}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                {selectedOrder.items.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between rounded-lg bg-gray-50 p-4"
+                  >
+                    <div>
+                      <h3 className="font-bold">{item.name}</h3>
+                      <p className="text-sm text-gray-600">
+                        {item.size} • {item.crust}
+                      </p>
+                      {item.toppings?.length > 0 && (
+                        <p className="text-xs text-gray-500">
+                          {item.toppings.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 space-y-4">
+                <h3 className="font-bold text-gray-900">Register Actions</h3>
+
+                {/* Actions for NEW orders */}
+                {['NEW', 'CONFIRMED'].includes(selectedOrder.status) ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <button
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="rounded-lg bg-blue-50 px-4 py-3 text-sm font-bold text-blue-600 hover:bg-blue-100"
+                    >
+                      ✏️ Edit Order
+                    </button>
+
+                    <button
+                      onClick={() => handleMakePriority(selectedOrder.id)}
+                      disabled={loading === selectedOrder.id}
+                      className="rounded-lg bg-yellow-50 px-4 py-3 text-sm font-bold text-yellow-600 hover:bg-yellow-100"
+                    >
+                      ⭐ Make Priority
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleOverride(
+                          selectedOrder.id,
+                          'IN_PREP',
+                          'Standard Progression',
+                          'Register Action'
+                        )
+                      }
+                      disabled={loading === selectedOrder.id}
+                      className="col-span-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-700"
+                    >
+                      Move to PREP
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-gray-50 p-4 text-center text-gray-500">
+                    Order is in {selectedOrder.status}. No actions available.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      <OrderEditModal
+        isOpen={isEditModalOpen}
+        order={selectedOrder}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={() => {
+          setIsEditModalOpen(false)
+          router.refresh()
+        }}
+        onDelete={() => {
+          setIsEditModalOpen(false)
+          setSelectedOrder(null)
+          router.refresh()
+        }}
+      />
     </div>
   )
 }
-

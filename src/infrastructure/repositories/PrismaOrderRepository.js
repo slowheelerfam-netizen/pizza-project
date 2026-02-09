@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma'
+import prisma from '../../lib/prisma'
 import { DEMO_MODE } from '../../lib/appConfig'
 
 export class PrismaOrderRepository {

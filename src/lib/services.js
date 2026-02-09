@@ -1,44 +1,95 @@
-import { DEMO_MODE } from '../lib/appConfig'
+// Client-safe facade
+// Actual implementations are injected server-side by actions.js
 
-import { OrderService } from '../domain/orderService'
+export let orderService = null
+export let repositories = null
 
-import { FileOrderRepository } from '../infrastructure/repositories/FileOrderRepository'
-import { FileWarningRepository } from '../infrastructure/repositories/FileWarningRepository'
-import { FileAdminActionRepository } from '../infrastructure/repositories/FileAdminActionRepository'
-import { FileNotificationRepository } from '../infrastructure/repositories/FileNotificationRepository'
-import { FileEmployeeRepository } from '../infrastructure/repositories/FileEmployeeRepository'
+export function registerServerServices(services) {
+  orderService = services.orderService
+  repositories = services.repositories
+}
 
-import { PrismaOrderRepository } from '../infrastructure/repositories/PrismaOrderRepository'
+function ensureInit() {
+  if (!repositories) {
+    throw new Error(
+      'Server services not initialized. Ensure registerServerServices is called.'
+    )
+  }
+}
 
-// --------------------
-// Repository Selection
-// --------------------
+// --- Data Accessors ---
 
-const ordersRepository = DEMO_MODE
-  ? new FileOrderRepository()
-  : new PrismaOrderRepository()
+export const getOrders = async () => {
+  ensureInit()
+  return repositories.order.getAll()
+}
 
-const warningsRepository = new FileWarningRepository()
-const adminActionRepository = new FileAdminActionRepository()
-const notificationsRepository = new FileNotificationRepository()
-export const employeeRepository = new FileEmployeeRepository()
+export const getWarnings = async () => {
+  ensureInit()
+  return repositories.warning.getAll()
+}
 
-// --------------------
-// Service Wiring
-// --------------------
+export const getActions = async () => {
+  ensureInit()
+  return repositories.adminAction.getAll()
+}
 
-export const orderService = new OrderService(
-  ordersRepository,
-  warningsRepository,
-  adminActionRepository,
-  notificationsRepository
-)
+export const getEmployees = async () => {
+  ensureInit()
+  return repositories.employee.getAll()
+}
 
-// --------------------
-// Read Accessors
-// --------------------
+// --- Service Operations ---
 
-export const getOrders = async () => await ordersRepository.getAll()
-export const getWarnings = async () => await warningsRepository.getAll()
-export const getActions = async () => await adminActionRepository.getAll()
-export const getEmployees = async () => await employeeRepository.getAll()
+export const addEmployee = async (data) => {
+  ensureInit()
+  return repositories.employee.create(data)
+}
+
+export const deleteEmployee = async (id) => {
+  ensureInit()
+  return repositories.employee.delete(id)
+}
+
+export const toggleEmployeeDuty = async (id, isOnDuty) => {
+  ensureInit()
+  const employee = await repositories.employee.findById(id)
+  if (employee) {
+    employee.isOnDuty = isOnDuty
+    await repositories.employee.update(employee)
+    return true
+  }
+  return false
+}
+
+export const addWarning = async (data) => {
+  ensureInit()
+  // Data should include { id, reason, createdBy, customerIdentifier, isActive, createdAt }
+  // Or at least minimal fields if the repo doesn't handle it.
+  // FileWarningRepository usually just pushes what it gets, so we assume the caller structures it,
+  // OR we structure it here?
+  // Let's stick to the repo just storing.
+  return repositories.warning.create(data)
+}
+
+export const checkCustomerWarning = async (phone) => {
+  ensureInit()
+  if (!phone) return { hasWarning: false }
+
+  const warnings = await repositories.warning.getAll()
+  const activeWarning = warnings.find(
+    (w) => w.isActive && w.customerIdentifier?.phone === phone
+  )
+
+  if (activeWarning) {
+    return {
+      hasWarning: true,
+      warning: {
+        reason: activeWarning.reason,
+        createdAt: activeWarning.createdAt,
+      },
+    }
+  }
+
+  return { hasWarning: false }
+}

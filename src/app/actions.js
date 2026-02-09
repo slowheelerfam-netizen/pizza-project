@@ -2,23 +2,22 @@
 
 import { revalidatePath } from 'next/cache'
 import { ROUTES } from '../lib/routes'
-import {
-  orderService,
-  getOrders,
-  getWarnings,
-  getActions,
-  getEmployees as getEmployeesService, // Assuming you have a service for this or will add it
-  employeeRepository // Or access the repository directly if service layer is thin
-} from '../lib/services'
+import { createServerServices } from '../server/services'
+import { registerServerServices } from '../lib/services'
 
-// import { prisma } from '../lib/prisma' // REMOVE PRISMA IMPORT
+// Initialize services on module load
+const { orderService, repositories } = createServerServices()
+
+// Register for other consumers (facade support)
+registerServerServices({ orderService, repositories })
 
 // --------------------
 // Employee / Staff Management
 // --------------------
+
+// Wrapper for direct export to ensure it's a Server Action
 export async function getEmployees() {
-  // Use service or repository instead of direct Prisma call
-  return await getEmployeesService() 
+  return repositories.employee.getAll()
 }
 
 export async function addEmployeeAction(prevState, formData) {
@@ -30,11 +29,10 @@ export async function addEmployeeAction(prevState, formData) {
       return { success: false, message: 'Missing fields' }
     }
 
-    // Use repository/service instead of Prisma
-    await employeeRepository.create({
-        name,
-        role,
-        isOnDuty: false,
+    await repositories.employee.create({
+      name,
+      role,
+      isOnDuty: true,
     })
 
     revalidatePath(ROUTES.HOME)
@@ -48,13 +46,11 @@ export async function addEmployeeAction(prevState, formData) {
 
 export async function toggleEmployeeDutyAction(id, isOnDuty) {
   try {
-    // Use repository/service instead of Prisma
-    const employee = await employeeRepository.findById(id)
+    const employee = await repositories.employee.findById(id)
     if (employee) {
-        employee.isOnDuty = isOnDuty
-        await employeeRepository.update(employee)
+      employee.isOnDuty = isOnDuty
+      await repositories.employee.update(employee)
     }
-
     revalidatePath(ROUTES.HOME)
     revalidatePath('/kitchen')
     return { success: true }
@@ -65,9 +61,7 @@ export async function toggleEmployeeDutyAction(id, isOnDuty) {
 
 export async function deleteEmployeeAction(id) {
   try {
-    // Use repository/service instead of Prisma
-    await employeeRepository.delete(id)
-    
+    await repositories.employee.delete(id)
     revalidatePath(ROUTES.HOME)
     revalidatePath('/kitchen')
     return { success: true }
@@ -79,10 +73,11 @@ export async function deleteEmployeeAction(id) {
 // --------------------
 // Warning / Security
 // --------------------
-export async function checkCustomerWarning(phone) {
+
+export async function checkCustomerWarningAction(phone) {
   if (!phone) return { hasWarning: false }
 
-  const warnings = await getWarnings()
+  const warnings = await repositories.warning.getAll()
   const activeWarning = warnings.find(
     (w) => w.isActive && w.customerIdentifier?.phone === phone
   )
@@ -111,7 +106,7 @@ export async function addWarningAction(phone, reason) {
       createdAt: new Date().toISOString(),
     }
 
-    await orderService.warnings.create(warning)
+    await repositories.warning.create(warning)
     revalidatePath(ROUTES.HOME)
     return { success: true, message: 'Warning added successfully' }
   } catch (error) {
@@ -126,10 +121,10 @@ export async function addWarningAction(phone, reason) {
 export async function fetchDashboardData() {
   try {
     const [orders, warnings, actions, employees] = await Promise.all([
-      getOrders(),
-      getWarnings(),
-      getActions(),
-      getEmployees(),
+      repositories.order.getAll(),
+      repositories.warning.getAll(),
+      repositories.adminAction.getAll(),
+      repositories.employee.getAll(),
     ])
 
     return {
@@ -140,7 +135,6 @@ export async function fetchDashboardData() {
     }
   } catch (error) {
     console.error('Failed to fetch dashboard data:', error)
-    // Return empty state to prevent page crash (e.g., if DB is missing on Vercel)
     return {
       orders: [],
       warnings: [],
@@ -197,59 +191,26 @@ export async function createOrderAction(prevState, formData) {
   }
 }
 
-// --------------------
-// Status Updates
-// --------------------
-export async function updateStatusAction(
-  orderId,
-  newStatus,
-  assignedTo = null
-) {
+export async function updateStatusAction(orderId, status, assignedTo) {
   try {
-    await orderService.updateStatus(orderId, newStatus, null, assignedTo)
-
+    await orderService.updateOrderStatus(orderId, status, assignedTo)
     revalidatePath(ROUTES.HOME)
     revalidatePath('/kitchen')
-    revalidatePath('/monitor')
-
+    revalidatePath('/oven')
     return { success: true }
   } catch (error) {
-    return { success: false, message: error.message }
+    console.error('Update Status Failed:', error)
+    return { success: false, message: 'Failed to update status' }
   }
 }
 
-export async function updateOrderDetailsAction(orderId, formData) {
+export async function updateOrderDetailsAction(orderId, details) {
   try {
-    const customerName = formData.get('customerName')
-    const customerPhone = formData.get('customerPhone')
-    const type = formData.get('type')
-    const address = formData.get('address')
-    const itemsJson = formData.get('items')
-    const totalPrice = parseFloat(formData.get('totalPrice'))
-
-    const items = JSON.parse(itemsJson)
-
-    const updates = {
-      customerSnapshot: {
-        name: customerName,
-        phone: customerPhone,
-        type,
-        address,
-      },
-      items,
-      totalPrice,
-    }
-
-    await orderService.updateOrderDetails(orderId, updates)
+    await orderService.updateOrderDetails(orderId, details)
     revalidatePath(ROUTES.HOME)
-    revalidatePath('/kitchen')
-    revalidatePath('/monitor')
-    return { success: true, message: 'Order updated successfully' }
+    return { success: true }
   } catch (error) {
-    console.error('[UPDATE_ORDER_FAILED]', error)
-    return { success: false, message: error.message }
+    console.error('Update Details Failed:', error)
+    return { success: false, message: 'Failed to update details' }
   }
-}
-export async function __testCreateOrder(input) {
-  await orderService.createOrder(input)
 }

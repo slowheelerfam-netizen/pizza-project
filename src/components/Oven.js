@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { demoStorage } from '../lib/demoStorage'
+import { generateLabelText } from '../utils/receiptPrinter'
 
 export default function Oven({ initialOrders, updateStatusAction }) {
   const router = useRouter()
   const [orders, setOrders] = useState(initialOrders)
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [shouldPrint, setShouldPrint] = useState(false)
 
   useEffect(() => {
     // Merge server orders with local storage orders
@@ -49,6 +51,16 @@ export default function Oven({ initialOrders, updateStatusAction }) {
   }, [router])
 
   const handleMarkReady = async (orderId) => {
+    // Print if requested
+    if (shouldPrint) {
+      const orderToPrint = orders.find((o) => o.id === orderId)
+      if (orderToPrint) {
+        console.log('\n--- [PHYSICAL LABEL PRINT START] ---')
+        console.log(generateLabelText(orderToPrint))
+        console.log('--- [PHYSICAL LABEL PRINT END] ---\n')
+      }
+    }
+
     // Optimistic
     setOrders((prev) => prev.filter((o) => o.id !== orderId))
     setSelectedOrder(null)
@@ -141,13 +153,34 @@ export default function Oven({ initialOrders, updateStatusAction }) {
                 </div>
               </div>
 
-              <div className="pt-4">
-                <button
-                  onClick={() => handleMarkReady(selectedOrder.id)}
-                  className="w-full rounded-xl bg-orange-600 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-orange-700 hover:shadow-xl active:scale-95"
-                >
-                  Mark as READY
-                </button>
+              <div className="border-t border-gray-100 bg-gray-50 p-6">
+                {/* Optional Print Checkbox */}
+                <div className="mb-4 flex items-center justify-end">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={shouldPrint}
+                      onChange={(e) => setShouldPrint(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    Print Order Details
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    disabled
+                    className="cursor-not-allowed rounded-xl bg-gray-300 py-4 text-xl font-bold text-white shadow-sm"
+                  >
+                    IN OVEN 🔥
+                  </button>
+                  <button
+                    onClick={() => handleMarkReady(selectedOrder.id)}
+                    className="rounded-xl bg-green-600 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-green-500 active:scale-95"
+                  >
+                    MARK AS READY ✅
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -156,10 +189,10 @@ export default function Oven({ initialOrders, updateStatusAction }) {
 
       {/* DEBUG INFO - Hidden for Production */}
       {false && (
-      <div className="pointer-events-none fixed bottom-0 left-0 z-50 bg-black/80 p-2 text-xs text-white opacity-50">
-        Debug: Total {orders.length} | Oven {ovenOrders.length} | Statuses:{' '}
-        {orders.map((o) => o.status).join(', ')}
-      </div>
+        <div className="pointer-events-none fixed bottom-0 left-0 z-50 bg-black/80 p-2 text-xs text-white opacity-50">
+          Debug: Total {orders.length} | Oven {ovenOrders.length} | Statuses:{' '}
+          {orders.map((o) => o.status).join(', ')}
+        </div>
       )}
     </div>
   )

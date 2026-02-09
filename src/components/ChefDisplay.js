@@ -17,6 +17,7 @@ export default function ChefDisplay({
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [assignmentMap, setAssignmentMap] = useState({}) // Local state for assignments in modal
   const [isAssignmentEnabled, setIsAssignmentEnabled] = useState(true)
+  const [shouldPrint, setShouldPrint] = useState(false)
 
   // Sync with server props when they change (due to polling)
   useEffect(() => {
@@ -79,8 +80,8 @@ export default function ChefDisplay({
       setSelectedOrder(null)
     }
 
-    // TRIGGER PRINT IF STATUS IS OVEN
-    if (newStatus === 'OVEN') {
+    // TRIGGER PRINT IF CHECKED
+    if (shouldPrint) {
       const orderToPrint = orders.find((o) => o.id === orderId)
       if (orderToPrint) {
         console.log('\n--- [PHYSICAL LABEL PRINT START] ---')
@@ -387,6 +388,19 @@ export default function ChefDisplay({
             </div>
 
             <div className="border-t border-gray-100 bg-gray-50 p-6">
+              {/* Optional Print Checkbox */}
+              <div className="mb-4 flex items-center justify-end">
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={shouldPrint}
+                    onChange={(e) => setShouldPrint(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  Print Order Details
+                </label>
+              </div>
+
               {/* 2. Button Logic in Modal (Status-Driven) */}
               {(() => {
                 // NEW: Assign & Start Prep
@@ -422,30 +436,48 @@ export default function ChefDisplay({
                   )
                 }
 
-                // PREP: Advance to Oven
-                if (selectedOrder.status === 'IN_PREP') {
+                // PREP or OVEN: Allow Advance to OVEN (if not there) or READY
+                if (['IN_PREP', 'OVEN'].includes(selectedOrder.status)) {
                   return (
-                    <button
-                      onClick={() =>
-                        handleStatusUpdate(
-                          selectedOrder.id,
-                          'OVEN',
-                          selectedOrder.assignedTo
-                        )
-                      }
-                      className="w-full rounded-xl bg-orange-500 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-orange-400 active:scale-95"
-                    >
-                      ADVANCE TO OVEN 🔥
-                    </button>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() =>
+                          handleStatusUpdate(
+                            selectedOrder.id,
+                            'OVEN',
+                            selectedOrder.assignedTo
+                          )
+                        }
+                        disabled={selectedOrder.status === 'OVEN'}
+                        className={`rounded-xl py-4 text-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
+                          selectedOrder.status === 'OVEN'
+                            ? 'cursor-not-allowed bg-gray-300'
+                            : 'bg-orange-500 hover:bg-orange-400'
+                        }`}
+                      >
+                        ADVANCE TO OVEN 🔥
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          handleStatusUpdate(
+                            selectedOrder.id,
+                            'READY',
+                            selectedOrder.assignedTo
+                          )
+                        }
+                        className="rounded-xl bg-green-600 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-green-500 active:scale-95"
+                      >
+                        MARK READY ✅
+                      </button>
+                    </div>
                   )
                 }
 
-                // OVEN / READY: No Actions allowed for Chef
+                // READY: No Actions allowed for Chef
                 return (
                   <div className="text-center font-medium text-gray-500">
-                    {selectedOrder.status === 'OVEN'
-                      ? 'Order is in Oven. Waiting for Oven Station to mark Ready.'
-                      : 'Order is Ready. No further actions.'}
+                    Order is Ready. No further actions.
                   </div>
                 )
               })()}

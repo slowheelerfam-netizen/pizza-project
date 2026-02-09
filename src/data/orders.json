@@ -39,7 +39,7 @@
     ],
     "totalPrice": 10,
     "createdAt": "2026-02-02T16:02:56.676Z",
-    "updatedAt": "2026-02-03T01:04:18.791Z",
+    "updatedAt": "2026-02-09T21:22:50.598Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -256,7 +256,7 @@
     ],
     "totalPrice": 97,
     "createdAt": "2026-02-02T16:03:55.059Z",
-    "updatedAt": null,
+    "updatedAt": "2026-02-09T21:22:43.553Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -615,6 +615,89 @@
       "customerId": null,
       "name": "bobbi",
       "phone": "8056345746",
+      "type": "PICKUP",
+      "address": null,
+      "isWalkIn": false
+    }
+  },
+  {
+    "id": "91cbee83-53f8-44af-8bb1-43713332f265",
+    "displayId": 2,
+    "status": "NEW",
+    "source": "CALL_IN",
+    "items": [
+      {
+        "id": 1770667359727,
+        "name": "Veggie Supreme",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [
+          "Mushrooms",
+          "Onions",
+          "Green Peppers",
+          "Black Olives"
+        ],
+        "price": 14,
+        "notes": "",
+        "details": "Medium (12\") | Original Hand Tossed"
+      },
+      {
+        "id": 1770667370431,
+        "name": "Pepperoni",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [
+          "Pepperoni"
+        ],
+        "price": 12,
+        "notes": "soggy",
+        "details": "Medium (12\") | Original Hand Tossed"
+      }
+    ],
+    "totalPrice": 26,
+    "createdAt": "2026-02-09T20:03:10.074Z",
+    "updatedAt": null,
+    "estimatedReadyAt": null,
+    "actualReadyAt": null,
+    "completedAt": null,
+    "isNoContact": false,
+    "customerSnapshot": {
+      "customerId": null,
+      "name": "bumpo",
+      "phone": "8058764587",
+      "type": "PICKUP",
+      "address": null,
+      "isWalkIn": false
+    }
+  },
+  {
+    "id": "d2f5579b-bbe6-4a83-bff6-e002589fb844",
+    "displayId": 3,
+    "status": "NEW",
+    "source": "CALL_IN",
+    "items": [
+      {
+        "id": 1770672127223,
+        "name": "Margherita",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [],
+        "price": 10,
+        "notes": "",
+        "details": "Medium (12\") | Original Hand Tossed"
+      }
+    ],
+    "totalPrice": 10,
+    "createdAt": "2026-02-09T21:22:23.368Z",
+    "updatedAt": null,
+    "estimatedReadyAt": null,
+    "actualReadyAt": null,
+    "completedAt": null,
+    "isNoContact": false,
+    "customerSnapshot": {
+      "customerId": null,
+      "name": "Chuckoh",
+      "phone": "8056453647",
       "type": "PICKUP",
       "address": null,
       "isWalkIn": false

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createOrderAction, checkCustomerWarning } from '../app/actions'
+import { createOrderAction, checkCustomerWarningAction } from '../app/actions'
 import { demoStorage } from '../lib/demoStorage'
 import { MENU_ITEMS } from '../types/models'
 import PizzaBuilderModal from './PizzaBuilderModal'
@@ -73,8 +73,8 @@ export default function OrderCreationForm() {
     setWarning(null)
     setOverrideWarning(false)
 
-    const result = await checkCustomerWarning(customerPhone)
-    if (result.hasWarning) {
+    const result = await checkCustomerWarningAction(customerPhone)
+    if (result?.hasWarning) {
       setWarning(result.warning)
     }
   }
@@ -108,9 +108,7 @@ export default function OrderCreationForm() {
 
     const result = await createOrderAction(null, formData)
 
-    // FALLBACK: If server action fails (e.g. Vercel with no DB), save to local storage
     if (!result.success && !result.message?.includes('Validation')) {
-      console.log('Server action failed, saving to local storage (Demo Mode)')
       demoStorage.saveOrder({
         customerSnapshot: {
           name: customerName,
@@ -122,10 +120,9 @@ export default function OrderCreationForm() {
         items,
         totalPrice: cartTotal,
       })
-      // Simulate success
+
       setLastResult({ success: true, message: 'Order created (Local Storage)' })
 
-      // Reset everything
       setItems([])
       setCustomerName('')
       setCustomerPhone('(805)')
@@ -140,7 +137,6 @@ export default function OrderCreationForm() {
     setIsSubmitting(false)
 
     if (result.success) {
-      // Reset everything
       setItems([])
       setCustomerName('')
       setCustomerPhone('(805)')
@@ -151,6 +147,7 @@ export default function OrderCreationForm() {
   }
 
   return (
+
     <>
       <div className="overflow-hidden rounded-3xl border border-white/50 bg-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
         <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white/50 px-4 py-3">

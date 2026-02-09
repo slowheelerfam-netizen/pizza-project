@@ -1,39 +1,30 @@
 import { NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
-import { orderService } from '../../../../lib/services'
+import { createRepositories } from '@/lib/repositoryFactory'
 
-export async function POST(request) {
-  try {
-    const body = await request.json()
-    const { orderId, reason, comment } = body
-    // Support both 'status' and 'newStatus' from client
-    const status = body.status || body.newStatus
+export const runtime = 'nodejs' // REQUIRED — Edge runtime breaks file-based repos
 
-    if (!orderId || !status) {
-      return NextResponse.json(
-        { message: 'Missing orderId or status' },
-        { status: 400 }
-      )
-    }
+export async function POST(req) {
+  const { orderId, status, reason } = await req.json()
 
-    // Admin override ignores state transitions validation usually,
-    // but our service enforces it. For now, we use the standard update.
-    const updatedOrder = await orderService.updateStatus(orderId, status)
+  const repos = createRepositories()
+  const orderRepo = repos.order
+  const adminActionRepo = repos.adminAction
 
-    // Revalidate all relevant paths
-    revalidatePath('/')
-    revalidatePath('/kitchen')
-    revalidatePath('/monitor')
-
+  if (!orderId || !status) {
     return NextResponse.json(
-      { message: 'Order status updated successfully', order: updatedOrder },
-      { status: 200 }
-    )
-  } catch (error) {
-    console.error('[API_ADMIN_OVERRIDE_POST_FAILED]', error)
-    return NextResponse.json(
-      { message: error.message || 'Failed to update order status' },
-      { status: 500 }
+      { success: false, message: 'Missing orderId or status' },
+      { status: 400 }
     )
   }
+
+  await orderRepo.updateStatus(orderId, status)
+
+  await adminActionRepo.log({
+    type: 'ADMIN_OVERRIDE',
+    orderId,
+    reason: reason || 'Manual override',
+    timestamp: new Date().toISOString(),
+  })
+
+  return NextResponse.json({ success: true })
 }
