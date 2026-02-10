@@ -1,11 +1,10 @@
 'use server'
 
-import { createServerServices } from '@/server/services'
+import { createServerServices } from '@/lib/createServerServices'
 import { revalidatePath } from 'next/cache'
 import { FileOrderRepository } from '@/infrastructure/repositories/FileOrderRepository'
 import { FileWarningRepository } from '@/infrastructure/repositories/FileWarningRepository'
 import { FileEmployeeRepository } from '@/infrastructure/repositories/FileEmployeeRepository'
-
 
 export async function createOrderAction(_, formData) {
   const services = createServerServices()
@@ -54,9 +53,16 @@ export async function updateOrderDetailsAction(orderId, updates) {
 
 export async function checkCustomerWarningAction(phone) {
   const services = createServerServices()
-  const warningRepo = services.warningRepository
+
+  const warningRepo =
+    services.warningRepository || services.warningRepo || null
+
+  if (!warningRepo || typeof warningRepo.findActiveByPhone !== 'function') {
+    return { hasWarning: false }
+  }
 
   const warning = await warningRepo.findActiveByPhone(phone)
+
   if (!warning) {
     return { hasWarning: false }
   }
@@ -66,6 +72,7 @@ export async function checkCustomerWarningAction(phone) {
     warning,
   }
 }
+
 // --------------------------------------------------
 // Demo / UI compatibility stubs
 // --------------------------------------------------

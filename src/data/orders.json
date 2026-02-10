@@ -819,5 +819,85 @@
       "address": null,
       "isWalkIn": true
     }
+  },
+  {
+    "id": "41a64714-dcfc-4d0d-9128-28bd4cf422e7",
+    "displayId": 3,
+    "status": "NEW",
+    "assumeChefRole": true,
+    "source": "REGISTER",
+    "items": [
+      {
+        "id": 1770755936903,
+        "name": "Veggie Supreme",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [
+          "Mushrooms",
+          "Onions",
+          "Green Peppers",
+          "Black Olives"
+        ],
+        "price": 14,
+        "notes": "",
+        "details": "Medium (12\") | Original Hand Tossed"
+      }
+    ],
+    "totalPrice": 14,
+    "isPriority": true,
+    "createdAt": "2026-02-09T20:38:59.272Z",
+    "updatedAt": null,
+    "estimatedReadyAt": null,
+    "actualReadyAt": null,
+    "completedAt": null,
+    "isNoContact": false,
+    "customerSnapshot": {
+      "customerId": null,
+      "name": "chocktah",
+      "phone": "(805)3453456",
+      "type": "PICKUP",
+      "address": null,
+      "isWalkIn": true
+    }
+  },
+  {
+    "id": "c2897948-fe72-4dfd-86e8-a82a799fa38b",
+    "displayId": 4,
+    "status": "NEW",
+    "assumeChefRole": true,
+    "source": "REGISTER",
+    "items": [
+      {
+        "id": 1770758504958,
+        "name": "Veggie Supreme",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [
+          "Mushrooms",
+          "Onions",
+          "Green Peppers",
+          "Black Olives"
+        ],
+        "price": 14,
+        "notes": "",
+        "details": "Medium (12\") | Original Hand Tossed"
+      }
+    ],
+    "totalPrice": 14,
+    "isPriority": true,
+    "createdAt": "2026-02-09T21:22:14.184Z",
+    "updatedAt": null,
+    "estimatedReadyAt": null,
+    "actualReadyAt": null,
+    "completedAt": null,
+    "isNoContact": false,
+    "customerSnapshot": {
+      "customerId": null,
+      "name": "Porky",
+      "phone": "(805)8765635",
+      "type": "PICKUP",
+      "address": null,
+      "isWalkIn": true
+    }
   }
 ]
