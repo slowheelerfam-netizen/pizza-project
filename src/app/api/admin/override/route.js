@@ -1,14 +1,33 @@
 import { NextResponse } from 'next/server'
-import { createRepositories } from '@/lib/repositoryFactory'
+import { createServerServices } from '@/server/services'
 
 export const runtime = 'nodejs' // REQUIRED — Edge runtime breaks file-based repos
 
 export async function POST(req) {
-  const { orderId, status, reason } = await req.json()
+  let payload
 
-  const repos = createRepositories()
-  const orderRepo = repos.order
-  const adminActionRepo = repos.adminAction
+  try {
+    payload = await req.json()
+  } catch {
+    return NextResponse.json(
+      { success: false, message: 'Invalid JSON payload' },
+      { status: 400 }
+    )
+  }
+
+  const { orderId, status, reason, comment, explicitOverride } = payload
+  const { orderService } = createServerServices()
+
+  // 🚨 HARD GUARD: override must be explicit
+  if (explicitOverride !== true) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Admin override requires explicitOverride=true'
+      },
+      { status: 400 }
+    )
+  }
 
   if (!orderId || !status) {
     return NextResponse.json(
@@ -17,14 +36,22 @@ export async function POST(req) {
     )
   }
 
-  await orderRepo.updateStatus(orderId, status)
+  try {
+    await orderService.adminOverrideStatus(
+      'admin-api',
+      orderId,
+      status,
+      reason || 'Manual override',
+      comment || null
+    )
 
-  await adminActionRepo.log({
-    type: 'ADMIN_OVERRIDE',
-    orderId,
-    reason: reason || 'Manual override',
-    timestamp: new Date().toISOString(),
-  })
-
-  return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[ADMIN_OVERRIDE_FAILED]', error)
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 }
+    )
+  }
 }
+

@@ -4,6 +4,7 @@ const STATUS_SEQUENCE = [
   ORDER_STATUS.NEW,
   ORDER_STATUS.CONFIRMED,
   ORDER_STATUS.IN_PREP,
+  ORDER_STATUS.MONITOR,
   ORDER_STATUS.OVEN,
   ORDER_STATUS.READY,
   ORDER_STATUS.COMPLETED,
@@ -17,12 +18,18 @@ const STATUS_SEQUENCE = [
  * 2. Skipping steps is NOT allowed (e.g., CREATED -> READY is invalid).
  * 3. Backward steps are NOT allowed.
  * 4. Transition to CANCELLED is allowed from ANY state except COMPLETED or already CANCELLED.
+ * 5. assumeChefRole logic:
+ *    - If TRUE: NEW -> MONITOR (skips PREP). NEW -> PREP is DENIED.
+ *    - If FALSE: NEW -> PREP -> MONITOR. NEW -> MONITOR is DENIED.
  *
- * @param {string} currentStatus - The current status of the order.
+ * @param {object|string} orderOrStatus - The order object or current status string (legacy).
  * @param {string} nextStatus - The desired new status.
  * @returns {boolean} - True if transition is valid, false otherwise.
  */
-export function isValidTransition(currentStatus, nextStatus) {
+export function isValidTransition(orderOrStatus, nextStatus) {
+  const currentStatus = typeof orderOrStatus === 'string' ? orderOrStatus : orderOrStatus.status
+  const assumeChefRole = typeof orderOrStatus === 'object' ? orderOrStatus.assumeChefRole : false
+
   if (currentStatus === nextStatus) {
     return false
   }
@@ -34,14 +41,35 @@ export function isValidTransition(currentStatus, nextStatus) {
     )
   }
 
-  // Allow skipping CONFIRMED (NEW -> IN_PREP)
-  if (
-    currentStatus === ORDER_STATUS.NEW &&
-    nextStatus === ORDER_STATUS.IN_PREP
-  ) {
-    return true
+  // RULE 2: If assumeChefRole = TRUE
+  //   ALLOW: NEW → MONITOR
+  //   DENY:  NEW → PREP
+  if (assumeChefRole) {
+    if (currentStatus === ORDER_STATUS.NEW && nextStatus === ORDER_STATUS.MONITOR) {
+      return true
+    }
+    if (currentStatus === ORDER_STATUS.NEW && nextStatus === ORDER_STATUS.IN_PREP) {
+      return false
+    }
   }
 
+  // RULE 1: If assumeChefRole = FALSE
+  //   ALLOW: NEW → PREP
+  //   DENY:  NEW → MONITOR
+  if (!assumeChefRole) {
+    if (currentStatus === ORDER_STATUS.NEW && nextStatus === ORDER_STATUS.MONITOR) {
+      return false
+    }
+    // Allow skipping CONFIRMED (NEW -> IN_PREP)
+    if (
+      currentStatus === ORDER_STATUS.NEW &&
+      nextStatus === ORDER_STATUS.IN_PREP
+    ) {
+      return true
+    }
+  }
+  
+  // Standard Sequence Check
   const currentIndex = STATUS_SEQUENCE.indexOf(currentStatus)
   const nextIndex = STATUS_SEQUENCE.indexOf(nextStatus)
 

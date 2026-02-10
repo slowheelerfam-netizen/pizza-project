@@ -32,9 +32,6 @@ export class OrderService {
         totalPrice,
       } = input
 
-      // Invariant: every order must persist a customer snapshot
-      console.log('CREATE ORDER INPUT', customerName, customerPhone)
-
       const customerSnapshot = {
         customerId: null,
         name:
@@ -45,7 +42,6 @@ export class OrderService {
         isWalkIn: input.isWalkIn || !customerName,
       }
 
-      // Calculate next display ID (1-50)
       const allOrders = await this.orders.getAll()
       const lastOrder =
         allOrders.length > 0
@@ -62,10 +58,14 @@ export class OrderService {
         id: crypto.randomUUID(),
         displayId: nextDisplayId,
         status: ORDER_STATUS.NEW,
+        assumeChefRole: input.assumeChefRole || false,
         source,
         items,
         totalPrice,
-        createdAt: new Date().toISOString(),
+        isPriority: !!input.isPriority,
+        createdAt: input.isPriority
+          ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+          : new Date().toISOString(),
         updatedAt: null,
         estimatedReadyAt: null,
         actualReadyAt: null,
@@ -76,12 +76,10 @@ export class OrderService {
 
       await this.orders.create(order)
 
-      // ✅ SUCCESS LOG (this is what you were missing)
       console.info('[ORDER_CREATED]', order.id, order.customerSnapshot.name)
 
       return order
     } catch (err) {
-      // ❌ FAILURE LOG (non-silent)
       console.error('[ORDER_CREATE_FAILED]', err.message)
       throw err
     }
@@ -93,7 +91,7 @@ export class OrderService {
       throw new Error(`Order ${orderId} not found`)
     }
 
-    if (!isValidTransition(order.status, newStatus)) {
+    if (!isValidTransition(order, newStatus)) {
       throw new Error(`Invalid transition from ${order.status} to ${newStatus}`)
     }
 
@@ -130,7 +128,6 @@ export class OrderService {
       throw new Error(`Order ${orderId} not found`)
     }
 
-    // Update allowed fields
     if (updates.customerSnapshot) {
       order.customerSnapshot = {
         ...order.customerSnapshot,
@@ -140,6 +137,8 @@ export class OrderService {
 
     if (updates.items) order.items = updates.items
     if (updates.totalPrice) order.totalPrice = updates.totalPrice
+    if (updates.createdAt) order.createdAt = updates.createdAt
+    if (updates.isPriority !== undefined) order.isPriority = updates.isPriority
 
     order.updatedAt = new Date().toISOString()
 

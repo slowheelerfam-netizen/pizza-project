@@ -3,10 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { demoStorage } from '../lib/demoStorage'
+import OrderEditModal from './OrderEditModal'
+import OrderDetailsModal from './OrderDetailsModal'
 
-export default function MonitorDisplay({ initialOrders }) {
+export default function MonitorDisplay({ initialOrders, updateStatusAction }) {
   const router = useRouter()
   const [orders, setOrders] = useState(initialOrders)
+
+  // Interaction State
+  const [editingOrder, setEditingOrder] = useState(null)
+  const [detailsOrder, setDetailsOrder] = useState(null)
 
   useEffect(() => {
     // Merge server orders with local storage orders
@@ -45,9 +51,35 @@ export default function MonitorDisplay({ initialOrders }) {
     return () => clearInterval(interval)
   }, [router])
 
-  // CHUNK 2: Monitor displays PREP orders only
-  const prepOrders = orders
-    .filter((o) => o.status === 'IN_PREP')
+  const handleStatusUpdate = async (orderId, newStatus, assignedTo) => {
+    // Optimistic update
+    setOrders((current) =>
+      current.map((o) =>
+        o.id === orderId
+          ? { ...o, status: newStatus, assignedTo: assignedTo || o.assignedTo }
+          : o
+      )
+    )
+
+    // Close modals
+    if (editingOrder?.id === orderId) {
+      setEditingOrder(null)
+    }
+
+    if (updateStatusAction) {
+      await updateStatusAction(orderId, newStatus, assignedTo)
+    }
+
+    // Always update local storage
+    demoStorage.updateOrderStatus(orderId, newStatus, assignedTo)
+
+    router.refresh()
+  }
+
+  // CHUNK 2: Monitor displays MONITOR orders only (passed from page)
+  // We double check the status here just in case local storage brings in others
+  const monitorOrders = orders
+    .filter((o) => o.status === 'MONITOR')
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
 
   return (
@@ -57,22 +89,28 @@ export default function MonitorDisplay({ initialOrders }) {
           🔪 MONITOR: PREP STATION
         </h1>
         <div className="rounded-full bg-slate-800 px-4 py-2 font-mono text-xl text-slate-400">
-          {prepOrders.length} Active
+          {monitorOrders.length} Active
         </div>
       </header>
 
       <div className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {prepOrders.map((order) => (
+        {monitorOrders.map((order) => (
           <div
             key={order.id}
-            className="rounded-2xl border-2 border-slate-700 bg-slate-800 p-6 shadow-xl"
+            onClick={() => setEditingOrder(order)}
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              setEditingOrder(null)
+              setDetailsOrder(order)
+            }}
+            className="cursor-pointer rounded-2xl border-2 border-slate-700 bg-slate-800 p-6 shadow-xl transition-all hover:border-slate-500 hover:shadow-2xl"
           >
             <div className="mb-6 flex items-center justify-between border-b-2 border-slate-700 pb-4">
               <h3 className="truncate text-3xl font-extrabold tracking-tight text-white">
                 {order.customerSnapshot.name}
               </h3>
               <span className="rounded-lg bg-blue-900 px-3 py-1.5 text-sm font-black tracking-wider text-blue-200 uppercase">
-                PREP
+                MONITOR
               </span>
             </div>
 
@@ -122,12 +160,28 @@ export default function MonitorDisplay({ initialOrders }) {
           </div>
         ))}
 
-        {prepOrders.length === 0 && (
+        {monitorOrders.length === 0 && (
           <div className="col-span-full py-20 text-center text-slate-500">
-            No orders in Prep
+            No orders in Monitor
           </div>
         )}
       </div>
+
+      {/* EDIT MODAL (Single Click) */}
+      <OrderEditModal
+        isOpen={!!editingOrder}
+        onClose={() => setEditingOrder(null)}
+        order={editingOrder}
+        viewContext="MONITOR"
+        onStatusUpdate={handleStatusUpdate}
+      />
+
+      {/* DETAILS MODAL (Double Click) */}
+      <OrderDetailsModal
+        isOpen={!!detailsOrder}
+        onClose={() => setDetailsOrder(null)}
+        order={detailsOrder}
+      />
     </div>
   )
 }

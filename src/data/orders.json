@@ -38,8 +38,8 @@
       }
     ],
     "totalPrice": 10,
-    "createdAt": "2026-02-02T16:02:56.676Z",
-    "updatedAt": "2026-02-09T21:22:50.598Z",
+    "createdAt": "2026-02-09T17:02:46.049Z",
+    "updatedAt": "2026-02-10T17:02:46.082Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -51,7 +51,8 @@
       "isWalkIn": false,
       "type": "PICKUP",
       "address": ""
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "94217971-c267-4096-8330-68cc7c8624bb",
@@ -79,8 +80,8 @@
       }
     ],
     "totalPrice": 26,
-    "createdAt": "2026-02-02T16:03:07.898Z",
-    "updatedAt": "2026-02-03T01:03:49.107Z",
+    "createdAt": "2026-02-09T17:04:06.761Z",
+    "updatedAt": "2026-02-10T17:04:06.802Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -92,7 +93,8 @@
       "isWalkIn": false,
       "type": "PICKUP",
       "address": ""
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "ef0734eb-3945-4517-9813-b952d166d50d",
@@ -148,8 +150,8 @@
       }
     ],
     "totalPrice": 21,
-    "createdAt": "2026-02-02T16:03:32.575Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T17:05:28.973Z",
+    "updatedAt": "2026-02-10T17:05:29.008Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -159,7 +161,8 @@
       "name": "got",
       "phone": "987987987987",
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "8dabd0a2-21b2-40c7-b693-af63d9db975c",
@@ -189,7 +192,7 @@
     ],
     "totalPrice": 47,
     "createdAt": "2026-02-02T16:03:43.389Z",
-    "updatedAt": "2026-02-05T19:38:30.726Z",
+    "updatedAt": "2026-02-09T22:21:03.366Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -205,7 +208,7 @@
   },
   {
     "id": "c222cae8-a678-4e83-b81c-16fc3769d42b",
-    "status": "NEW",
+    "status": "IN_PREP",
     "source": "CALL_IN",
     "items": [
       {
@@ -255,8 +258,8 @@
       }
     ],
     "totalPrice": 97,
-    "createdAt": "2026-02-02T16:03:55.059Z",
-    "updatedAt": "2026-02-09T21:22:43.553Z",
+    "createdAt": "2026-02-09T17:25:37.763Z",
+    "updatedAt": "2026-02-10T17:27:33.546Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -266,7 +269,8 @@
       "name": "jac",
       "phone": "21312312312",
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "ac8c046a-2d84-4b16-b122-4aafa0e98edd",
@@ -305,8 +309,8 @@
       }
     ],
     "totalPrice": 66,
-    "createdAt": "2026-02-02T17:32:02.120Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T16:57:03.779Z",
+    "updatedAt": "2026-02-10T16:57:03.798Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -316,7 +320,8 @@
       "name": "bob rossie",
       "phone": "2342342344",
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "57be7376-952e-41ae-99c1-e1dec2271dbd",
@@ -383,8 +388,8 @@
       }
     ],
     "totalPrice": 26.4,
-    "createdAt": "2026-02-03T00:31:28.121Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T17:05:52.598Z",
+    "updatedAt": "2026-02-10T17:05:53.884Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -396,7 +401,8 @@
       "type": "PICKUP",
       "address": null,
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "f63dd7b8-9b57-419b-af28-d81f766b5cb2",
@@ -420,8 +426,8 @@
       }
     ],
     "totalPrice": 20,
-    "createdAt": "2026-02-03T00:55:10.886Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T17:15:53.625Z",
+    "updatedAt": "2026-02-10T17:15:53.713Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -433,7 +439,8 @@
       "type": "DELIVERY",
       "address": "1111 morningside way",
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "b1041ce2-fa62-4de5-b8d2-82bc3eb646e0",
@@ -452,8 +459,8 @@
       }
     ],
     "totalPrice": 10,
-    "createdAt": "2026-02-03T02:16:39.832Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T17:18:52.704Z",
+    "updatedAt": "2026-02-10T17:18:52.775Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -465,7 +472,8 @@
       "type": "PICKUP",
       "address": null,
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "be50ae4b-3685-4d8a-a0e3-1fa4c7f55ca3",
@@ -484,8 +492,8 @@
       }
     ],
     "totalPrice": 10,
-    "createdAt": "2026-02-03T02:44:26.831Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T17:05:59.951Z",
+    "updatedAt": "2026-02-10T17:06:01.779Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -497,7 +505,8 @@
       "type": "PICKUP",
       "address": null,
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "48c628f0-1ef8-4af8-8bc6-9c652221a6fd",
@@ -535,8 +544,8 @@
       }
     ],
     "totalPrice": 31.4,
-    "createdAt": "2026-02-03T06:31:49.233Z",
-    "updatedAt": "2026-02-03T06:32:09.134Z",
+    "createdAt": "2026-02-09T17:14:31.214Z",
+    "updatedAt": "2026-02-10T17:14:31.253Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -548,7 +557,8 @@
       "type": "PICKUP",
       "address": "",
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "d7580bb0-e085-4d16-86dd-ed6cd45219be",
@@ -605,8 +615,8 @@
       }
     ],
     "totalPrice": 12,
-    "createdAt": "2026-02-05T20:55:33.818Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T17:14:51.753Z",
+    "updatedAt": "2026-02-10T17:14:53.128Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -618,7 +628,8 @@
       "type": "PICKUP",
       "address": null,
       "isWalkIn": false
-    }
+    },
+    "isPriority": true
   },
   {
     "id": "91cbee83-53f8-44af-8bb1-43713332f265",
@@ -688,8 +699,8 @@
       }
     ],
     "totalPrice": 10,
-    "createdAt": "2026-02-09T21:22:23.368Z",
-    "updatedAt": null,
+    "createdAt": "2026-02-09T17:15:17.646Z",
+    "updatedAt": "2026-02-10T17:15:19.589Z",
     "estimatedReadyAt": null,
     "actualReadyAt": null,
     "completedAt": null,
@@ -701,6 +712,112 @@
       "type": "PICKUP",
       "address": null,
       "isWalkIn": false
+    },
+    "isPriority": true
+  },
+  {
+    "id": "242b536b-fa20-460a-8dff-894d5e37ea85",
+    "displayId": 4,
+    "status": "NEW",
+    "assumeChefRole": false,
+    "source": "CALL_IN",
+    "items": [
+      {
+        "id": 1770677655346,
+        "name": "Margherita",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [],
+        "price": 10,
+        "notes": "",
+        "details": "Medium (12\") | Original Hand Tossed"
+      }
+    ],
+    "totalPrice": 10,
+    "createdAt": "2026-02-09T17:15:03.940Z",
+    "updatedAt": "2026-02-10T17:15:12.954Z",
+    "estimatedReadyAt": null,
+    "actualReadyAt": null,
+    "completedAt": null,
+    "isNoContact": false,
+    "customerSnapshot": {
+      "customerId": null,
+      "name": "sdff",
+      "phone": "5676545678",
+      "type": "PICKUP",
+      "address": null,
+      "isWalkIn": false
+    },
+    "isPriority": true
+  },
+  {
+    "id": "7e2bbcca-813b-4c62-969e-1c10b599ec59",
+    "displayId": 3,
+    "status": "NEW",
+    "assumeChefRole": true,
+    "source": "REGISTER",
+    "items": [
+      {
+        "id": 1770748481976,
+        "name": "Margherita",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [],
+        "price": 10,
+        "notes": "",
+        "details": "Medium (12\") | Original Hand Tossed"
+      }
+    ],
+    "totalPrice": 10,
+    "isPriority": true,
+    "createdAt": "2026-02-09T18:34:47.426Z",
+    "updatedAt": null,
+    "estimatedReadyAt": null,
+    "actualReadyAt": null,
+    "completedAt": null,
+    "isNoContact": false,
+    "customerSnapshot": {
+      "customerId": null,
+      "name": "bobo",
+      "phone": "(805)8768765",
+      "type": "PICKUP",
+      "address": null,
+      "isWalkIn": true
+    }
+  },
+  {
+    "id": "4fc26469-d9eb-4c7b-960c-80fe4d9a290b",
+    "displayId": 3,
+    "status": "NEW",
+    "assumeChefRole": true,
+    "source": "REGISTER",
+    "items": [
+      {
+        "id": 1770749781898,
+        "name": "Margherita",
+        "size": "Medium (12\")",
+        "crust": "Original Hand Tossed",
+        "toppings": [],
+        "price": 10,
+        "notes": "",
+        "details": "Medium (12\") | Original Hand Tossed"
+      }
+    ],
+    "totalPrice": 10,
+    "isPriority": true,
+    "createdAt": "2026-02-09T18:56:27.510Z",
+    "updatedAt": null,
+    "estimatedReadyAt": null,
+    "actualReadyAt": null,
+    "completedAt": null,
+    "isNoContact": false,
+    "customerSnapshot": {
+      "customerId": null,
+      "name": "mach1",
+      "phone": "(805)3453456",
+      "type": "PICKUP",
+      "address": null,
+      "isWalkIn": true
     }
   }
 ]

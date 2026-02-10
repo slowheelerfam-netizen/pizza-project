@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "1db0f027-b2b9-4ef1-9707-4ae47e0e51bc",
+    "adminId": "admin-api",
+    "targetType": "ORDER",
+    "targetId": "c222cae8-a678-4e83-b81c-16fc3769d42b",
+    "actionType": "STATUS_OVERRIDE",
+    "comment": "Standard Progression: Register Action",
+    "timestamp": "2026-02-10T17:27:33.580Z"
+  }
+]

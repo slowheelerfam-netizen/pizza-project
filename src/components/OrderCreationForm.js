@@ -19,6 +19,8 @@ export default function OrderCreationForm() {
   const [isWalkIn, setIsWalkIn] = useState(false)
   const [orderType, setOrderType] = useState('PICKUP') // PICKUP or DELIVERY
   const [address, setAddress] = useState('')
+  const [assumeChefRole, setAssumeChefRole] = useState(false)
+  const [isPriority, setIsPriority] = useState(false)
 
   // Warning State
   const [warning, setWarning] = useState(null)
@@ -103,6 +105,8 @@ export default function OrderCreationForm() {
     formData.append('type', orderType)
     formData.append('address', address)
     formData.append('isWalkIn', isWalkIn.toString())
+    formData.append('assumeChefRole', 'true')
+    formData.append('isPriority', isPriority.toString())
     formData.append('items', JSON.stringify(items))
     formData.append('totalPrice', cartTotal.toString())
 
@@ -129,6 +133,8 @@ export default function OrderCreationForm() {
       setAddress('')
       setOrderType('PICKUP')
       setIsWalkIn(false)
+      setAssumeChefRole(false)
+      setIsPriority(false)
       setIsSubmitting(false)
       return
     }
@@ -143,11 +149,12 @@ export default function OrderCreationForm() {
       setAddress('')
       setOrderType('PICKUP')
       setIsWalkIn(false)
+      setAssumeChefRole(false)
+      setIsPriority(false)
     }
   }
 
   return (
-
     <>
       <div className="overflow-hidden rounded-3xl border border-white/50 bg-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
         <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white/50 px-4 py-3">
@@ -238,7 +245,7 @@ export default function OrderCreationForm() {
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Order Type
                 </label>
-                <div className="mt-1 flex gap-4">
+                <div className="mt-1 flex flex-wrap gap-4">
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="radio"
@@ -272,6 +279,28 @@ export default function OrderCreationForm() {
                     />
                     <span className="text-sm font-bold text-purple-700">
                       Walk In
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 border-l border-gray-300 pl-4">
+                    <input
+                      type="checkbox"
+                      checked={assumeChefRole}
+                      onChange={(e) => setAssumeChefRole(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    <span className="text-sm font-bold text-teal-700">
+                      Assume Chef Role
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 border-l border-gray-300 pl-4">
+                    <input
+                      type="checkbox"
+                      checked={isPriority}
+                      onChange={(e) => setIsPriority(e.target.checked)}
+                      className="h-4 w-4 rounded border-yellow-400 text-yellow-600 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm font-bold text-yellow-700">
+                      High Priority
                     </span>
                   </label>
                 </div>
