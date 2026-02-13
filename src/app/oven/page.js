@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic'
 export default async function OvenPage() {
   const data = await fetchDashboardData()
   const safeOrders = Array.isArray(data.orders) ? data.orders : []
-  
-  // Filter for both MONITOR (Prep) and OVEN statuses
+
+  // Filter for OVEN and READY statuses
   const activeOrders = safeOrders.filter((order) =>
-    ['MONITOR', 'OVEN'].includes(order.status)
+    ['OVEN', 'READY'].includes(order.status)
   )
 
   return (

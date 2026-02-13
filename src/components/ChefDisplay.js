@@ -1,16 +1,23 @@
 'use client'
 
-import React, { useState, useOptimistic, startTransition } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useOptimistic,
+  startTransition,
+} from 'react'
+import { useRouter } from 'next/navigation'
 import { ORDER_STATUS } from '../types/models'
 import OrderEditModal from './OrderEditModal'
+import OrderCard from './OrderCard'
 
 /**
  * CONTRACT (LOCKED)
  * -----------------
- * Status flow: NEW → MONITOR → OVEN → READY
+ * Status flow: NEW → PREP → OVEN → READY
  *
  * KITCHEN VIEW:
- * - Responsible ONLY for: MONITOR → OVEN
+ * - Responsible ONLY for: PREP → OVEN
  * - Does NOT operate on NEW or READY
  */
 
@@ -32,8 +39,12 @@ export default function ChefDisplay({
     }
   )
 
-  const monitorOrders = optimisticOrders
-    .filter((o) => o.status === ORDER_STATUS.MONITOR)
+  const newOrders = optimisticOrders
+    .filter((o) => o.status === ORDER_STATUS.NEW)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+  const activePrepOrders = optimisticOrders
+    .filter((o) => o.status === ORDER_STATUS.PREP)
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
 
   const ovenOrders = optimisticOrders
@@ -49,49 +60,110 @@ export default function ChefDisplay({
     }
   }
 
-  const renderOrderCard = (order, colorClass) => (
-    <div
-      key={order.id}
-      onClick={() => setEditingOrder(order)}
-      className={`mb-3 cursor-pointer rounded-lg border p-3 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg ${colorClass}`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="max-w-[150px] truncate text-lg font-bold text-white">
-            {order.customerSnapshot?.name || 'Walk-in'}
-          </span>
-          {order.assignedTo && (
-            <span className="text-xs font-medium text-yellow-300">
-              👨‍🍳 {order.assignedTo}
-            </span>
-          )}
-        </div>
-        <span className="rounded bg-black/30 px-2 py-1 text-xs font-bold whitespace-nowrap text-white">
-          {order.status}
-        </span>
-      </div>
-      <div className="mt-2 text-xs text-white/80">
-        {order.items?.length || 0} items • ${order.totalPrice || '0.00'}
-      </div>
-    </div>
-  )
+  // Refresh interval logic
+  const router = useRouter()
+  useEffect(() => {
+    const interval = setInterval(() => {
+      startTransition(() => {
+        router.refresh()
+      })
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [router])
 
   return (
-    <>
-      <div className="grid h-[calc(100vh-140px)] grid-cols-1 gap-4 overflow-hidden md:grid-cols-2">
-        {/* PREP (formerly MONITOR) */}
-        <Column title="PREP" color="green" count={monitorOrders.length}>
-          {monitorOrders.map((o) =>
-            renderOrderCard(o, 'bg-green-600 border-green-400')
-          )}
-        </Column>
+    <div className="flex h-screen flex-col overflow-hidden bg-slate-100">
+      {/* Header */}
+      <header className="z-10 flex items-center justify-between bg-white px-6 py-3 shadow-sm">
+        <h1 className="text-xl font-black tracking-tight text-indigo-900">
+          👨‍🍳 Kitchen Station
+        </h1>
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-bold text-gray-500">
+            {employees.filter((e) => e.isOnDuty).length} Active Staff
+          </div>
+        </div>
+      </header>
 
-        {/* OVEN */}
-        <Column title="OVEN" color="orange" count={ovenOrders.length}>
-          {ovenOrders.map((o) =>
-            renderOrderCard(o, 'bg-orange-600 border-orange-400')
-          )}
-        </Column>
+      {/* 2-Column Dashboard (Prep vs Oven) */}
+      <div className="flex-1 overflow-hidden p-6">
+        <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2">
+          {/* COL 1: PREP */}
+          <div className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-xl">
+            <div className="rounded-t-2xl border-b border-gray-100 bg-yellow-50 p-4">
+              <h2 className="flex items-center justify-between text-lg font-black text-yellow-900">
+                <span>🔪 Prep Station</span>
+                <span className="rounded-full bg-yellow-200 px-2 py-0.5 text-sm">
+                  {newOrders.length + activePrepOrders.length}
+                </span>
+              </h2>
+            </div>
+            <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
+              {newOrders.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="mb-2 text-xs font-black tracking-wider text-blue-600 uppercase">
+                    Incoming ({newOrders.length})
+                  </h3>
+                  {newOrders.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      onClick={() => setEditingOrder(order)}
+                    />
+                  ))}
+                  <div className="my-4 border-t border-dashed border-gray-300"></div>
+                </div>
+              )}
+
+              {activePrepOrders.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="mb-2 text-xs font-black tracking-wider text-indigo-600 uppercase">
+                    In Prep ({activePrepOrders.length})
+                  </h3>
+                  {activePrepOrders.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      onClick={() => setEditingOrder(order)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {newOrders.length === 0 && activePrepOrders.length === 0 && (
+                <div className="py-10 text-center text-gray-400">
+                  No orders in Prep
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* COL 2: OVEN */}
+          <div className="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-xl">
+            <div className="rounded-t-2xl border-b border-gray-100 bg-orange-50 p-4">
+              <h2 className="flex items-center justify-between text-lg font-black text-orange-900">
+                <span>🔥 Oven Station</span>
+                <span className="rounded-full bg-orange-200 px-2 py-0.5 text-sm">
+                  {ovenOrders.length}
+                </span>
+              </h2>
+            </div>
+            <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
+              {ovenOrders.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  onClick={() => setEditingOrder(order)}
+                />
+              ))}
+              {ovenOrders.length === 0 && (
+                <div className="py-10 text-center text-gray-400">
+                  Oven is empty
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       <OrderEditModal
@@ -102,34 +174,6 @@ export default function ChefDisplay({
         onStatusUpdate={handleStatusUpdate}
         onClose={() => setEditingOrder(null)}
       />
-    </>
-  )
-}
-
-function Column({ title, count, color, children }) {
-  const colorMap = {
-    green: 'text-green-400 bg-green-500/20 text-green-300',
-    orange: 'text-orange-400 bg-orange-500/20 text-orange-300',
-  }
-
-  return (
-    <div className="flex flex-col rounded-xl bg-gray-800/50 p-4 backdrop-blur-sm">
-      <div className="mb-4 flex items-center justify-between border-b border-gray-700 pb-2">
-        <h2 className={`text-xl font-black ${colorMap[color]?.split(' ')[0]}`}>
-          {title}
-        </h2>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-bold ${colorMap[color]}`}
-        >
-          {count}
-        </span>
-      </div>
-      <div className="flex-1 overflow-y-auto pr-1">
-        {children}
-        {count === 0 && (
-          <p className="py-4 text-center text-sm text-gray-500">No orders</p>
-        )}
-      </div>
     </div>
   )
 }

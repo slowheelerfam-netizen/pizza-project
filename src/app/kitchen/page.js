@@ -18,11 +18,12 @@ export default async function KitchenPage() {
    * ------------------------------
    * Chef sees FULL universe needed for progression,
    * but is responsible ONLY for:
-   * MONITOR → OVEN
+   * PREP → OVEN
    */
   const kitchenOrders = safeOrders.filter(
     (order) =>
-      order.status === ORDER_STATUS.MONITOR ||
+      order.status === ORDER_STATUS.NEW ||
+      order.status === ORDER_STATUS.PREP ||
       order.status === ORDER_STATUS.OVEN
   )
 
@@ -37,4 +38,3 @@ export default async function KitchenPage() {
     </main>
   )
 }
-

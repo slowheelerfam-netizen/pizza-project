@@ -26,6 +26,9 @@ export async function createOrderAction(_, formData) {
 
   revalidatePath('/')
   revalidatePath('/register')
+  revalidatePath('/kitchen')
+  revalidatePath('/monitor')
+  revalidatePath('/oven')
 
   return { success: true, order }
 }

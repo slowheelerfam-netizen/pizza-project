@@ -55,7 +55,7 @@ export default async function Home() {
               href="/monitor"
               className="rounded-full bg-green-500/20 px-6 py-2 text-sm font-bold text-white shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-green-500/30 active:scale-95"
             >
-              Monitor
+              Live Prep Queue
             </Link>
           </div>
         </header>

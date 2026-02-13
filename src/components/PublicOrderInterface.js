@@ -9,16 +9,12 @@ export default function PublicOrderInterface({
   employees = [],
   updateStatusAction, // Passed from server component
   createOrderAction, // Passed from server component
-  updateOrderDetailsAction, // New prop for updating orders
 }) {
   const [cart, setCart] = useState([])
   const [isBuilderOpen, setIsBuilderOpen] = useState(false)
   const [selectedPizzaForBuilder, setSelectedPizzaForBuilder] = useState(
     MENU_ITEMS[0]
   )
-
-  // State for editing an existing order
-  const [editingOrderId, setEditingOrderId] = useState(null)
 
   // Optimistic UI for Orders
   const [optimisticOrders, addOptimisticOrder] = useOptimistic(
@@ -44,35 +40,17 @@ export default function PublicOrderInterface({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderResult, setOrderResult] = useState(null)
 
-  // Helper to load an order into the "cart" for editing
-  const handleEditOrder = (order) => {
-    // Map order items to cart format
-    // Note: order.items from DB has toppings as array of strings (parsed in repository)
-    const cartItems = order.items.map((item) => ({
-      ...item,
-      // Reconstruct details if missing (for display in cart)
-      details:
-        item.details ||
-        `${item.size || 'Medium'} | ${item.crust || 'Original'}`,
-    }))
-
-    setCart(cartItems)
-    setCustomerName(order.customerSnapshot?.name || '')
-    setCustomerPhone(order.customerSnapshot?.phone || '')
-    setOrderType(order.customerSnapshot?.type || 'PICKUP')
-    setAddress(order.customerSnapshot?.address || '')
-    setSpecialInstructions(order.specialInstructions || '')
-
-    setEditingOrderId(order.id)
-    setIsCheckoutMode(true) // Open checkout modal immediately to see summary/details
-  }
-
   // Auto-refresh logic could be added here or rely on Next.js router refresh
   // For now, we rely on initialOrders prop updates (from parent re-renders)
 
   // Filter Orders for Dashboard (Use optimisticOrders instead of initialOrders)
-  const prepOrders = optimisticOrders
-    .filter((o) => o.status === 'MONITOR' || o.status === 'NEW')
+  // Split Column 1 into NEW and PREP for better visual feedback
+  const newOrders = optimisticOrders
+    .filter((o) => o.status === 'NEW')
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+  const activePrepOrders = optimisticOrders
+    .filter((o) => o.status === 'PREP')
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
 
   const ovenOrders = optimisticOrders
@@ -91,18 +69,10 @@ export default function PublicOrderInterface({
         key={order.id}
         className={`mb-3 rounded-lg border bg-white p-3 shadow-sm transition-all ${
           isNew ? 'border-l-4 border-l-blue-500' : ''
-        } ${columnType === 'PREP' ? 'cursor-pointer hover:shadow-md' : ''}`}
-        onClick={() => {
-          if (columnType === 'PREP') {
-            handleEditOrder(order)
-          }
-        }}
+        }`}
       >
         <div className="flex items-start justify-between">
-          <div
-            className=""
-            title={columnType === 'PREP' ? 'Click to Edit Order' : ''}
-          >
+          <div className="">
             <div className="text-lg font-bold text-gray-900">
               {order.customerSnapshot?.name || 'Guest'}
             </div>
@@ -125,18 +95,9 @@ export default function PublicOrderInterface({
               {order.customerSnapshot?.type}
             </span>
             {/* Action Button based on column */}
-            {columnType === 'PREP' && (
+            {(columnType === 'PREP' || columnType === 'NEW') && (
               <>
                 <div className="flex gap-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleEditOrder(order)
-                    }}
-                    className="rounded bg-gray-100 px-2 py-1 text-xs font-bold text-gray-600 hover:bg-gray-200"
-                  >
-                    Edit
-                  </button>
                   <button
                     onClick={async (e) => {
                       e.stopPropagation()
@@ -165,15 +126,15 @@ export default function PublicOrderInterface({
                     onClick={async (e) => {
                       e.stopPropagation()
                       startTransition(() => {
-                        addOptimisticOrder({ id: order.id, status: 'MONITOR' })
+                        addOptimisticOrder({ id: order.id, status: 'PREP' })
                       })
                       if (updateStatusAction) {
-                        await updateStatusAction(order.id, 'MONITOR')
+                        await updateStatusAction(order.id, 'PREP')
                       }
                     }}
                     className="rounded bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-200"
                   >
-                    PREP →
+                    Start Prep
                   </button>
                 ) : (
                   <button
@@ -188,7 +149,7 @@ export default function PublicOrderInterface({
                     }}
                     className="rounded bg-orange-100 px-2 py-1 text-xs font-bold text-orange-700 hover:bg-orange-200"
                   >
-                    To Oven →
+                    Send to OVEN
                   </button>
                 )}
               </>
@@ -205,7 +166,7 @@ export default function PublicOrderInterface({
                 }}
                 className="rounded bg-green-100 px-2 py-1 text-xs font-bold text-green-700 hover:bg-green-200"
               >
-                Boxing →
+                Start BOXING
               </button>
             )}
             {columnType === 'READY' && (
@@ -220,7 +181,7 @@ export default function PublicOrderInterface({
                 }}
                 className="rounded bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700 hover:bg-gray-200"
               >
-                Ready
+                COMPLETE Order
               </button>
             )}
           </div>
@@ -261,34 +222,20 @@ export default function PublicOrderInterface({
 
     let result = { success: false, message: 'Failed' }
 
-    if (editingOrderId) {
-      // UPDATE EXISTING ORDER
-      if (updateOrderDetailsAction) {
-        result = await updateOrderDetailsAction(editingOrderId, {
-          customerSnapshot,
-          items: cart,
-          totalPrice: cartTotal,
-          specialInstructions,
-        })
-      } else {
-        console.warn('No updateOrderDetailsAction provided')
-      }
-    } else {
-      // CREATE NEW ORDER
-      const formData = new FormData()
-      formData.append('customerName', customerName)
-      formData.append('customerPhone', customerPhone)
-      formData.append('type', orderType)
-      formData.append('address', address)
-      formData.append('items', JSON.stringify(cart))
-      formData.append('totalPrice', cartTotal.toString())
-      formData.append('specialInstructions', specialInstructions)
+    // CREATE NEW ORDER
+    const formData = new FormData()
+    formData.append('customerName', customerName)
+    formData.append('customerPhone', customerPhone)
+    formData.append('type', orderType)
+    formData.append('address', address)
+    formData.append('items', JSON.stringify(cart))
+    formData.append('totalPrice', cartTotal.toString())
+    formData.append('specialInstructions', specialInstructions)
 
-      if (createOrderAction) {
-        result = await createOrderAction(null, formData)
-      } else {
-        console.warn('No createOrderAction provided')
-      }
+    if (createOrderAction) {
+      result = await createOrderAction(null, formData)
+    } else {
+      console.warn('No createOrderAction provided')
     }
 
     setOrderResult(result)
@@ -301,7 +248,7 @@ export default function PublicOrderInterface({
       setAddress('')
       setOrderType('PICKUP')
       setSpecialInstructions('')
-      setEditingOrderId(null) // Clear editing state
+      // setEditingOrderId(null) // Removed
       setIsCheckoutMode(false)
       // Close success message after 3s
       setTimeout(() => setOrderResult(null), 3000)
@@ -314,9 +261,7 @@ export default function PublicOrderInterface({
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
         <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
           <div className="flex items-center justify-between bg-indigo-600 px-6 py-4 text-white">
-            <h2 className="text-xl font-bold">
-              {editingOrderId ? 'Edit Order' : 'Checkout'}
-            </h2>
+            <h2 className="text-xl font-bold">Checkout</h2>
             <button
               onClick={() => {
                 // Clear everything for a new order
@@ -326,7 +271,7 @@ export default function PublicOrderInterface({
                 setAddress('')
                 setOrderType('PICKUP')
                 setSpecialInstructions('')
-                setEditingOrderId(null)
+                // setEditingOrderId(null) // Removed
                 setOrderResult(null)
                 setIsCheckoutMode(false)
                 setIsBuilderOpen(true)
@@ -430,62 +375,29 @@ export default function PublicOrderInterface({
                   disabled={isSubmitting}
                   className="flex-1 rounded-lg bg-green-600 px-4 py-2 font-bold text-white hover:bg-green-700 disabled:opacity-50"
                 >
-                  {isSubmitting
-                    ? 'Saving...'
-                    : editingOrderId
-                      ? 'Update Order'
-                      : 'Confirm Order'}
+                  {isSubmitting ? 'Saving...' : 'Confirm Order'}
                 </button>
               </div>
               {/* Cancel Order Button */}
               <button
                 type="button"
                 onClick={async () => {
-                  if (editingOrderId) {
-                    // Cancel existing order
-                    if (
-                      confirm(
-                        'Are you sure you want to CANCEL this existing order? It will be removed.'
-                      )
-                    ) {
-                      startTransition(() => {
-                        addOptimisticOrder({
-                          id: editingOrderId,
-                          status: 'CANCELLED',
-                        })
-                      })
-                      if (updateStatusAction) {
-                        await updateStatusAction(editingOrderId, 'CANCELLED')
-                      }
-                      setCart([])
-                      setCustomerName('')
-                      setCustomerPhone('')
-                      setAddress('')
-                      setOrderType('PICKUP')
-                      setSpecialInstructions('')
-                      setEditingOrderId(null)
-                      setIsCheckoutMode(false)
-                    }
-                  } else {
-                    // Cancel new order creation (Discard)
-                    if (
-                      confirm(
-                        'Are you sure you want to discard this new order?'
-                      )
-                    ) {
-                      setCart([])
-                      setCustomerName('')
-                      setCustomerPhone('')
-                      setAddress('')
-                      setOrderType('PICKUP')
-                      setSpecialInstructions('')
-                      setIsCheckoutMode(false)
-                    }
+                  // Cancel new order creation (Discard)
+                  if (
+                    confirm('Are you sure you want to discard this new order?')
+                  ) {
+                    setCart([])
+                    setCustomerName('')
+                    setCustomerPhone('')
+                    setAddress('')
+                    setOrderType('PICKUP')
+                    setSpecialInstructions('')
+                    setIsCheckoutMode(false)
                   }
                 }}
                 className="w-full rounded-lg border-2 border-red-100 bg-red-50 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-100"
               >
-                {editingOrderId ? 'Cancel This Order' : 'Discard Order'}
+                Discard Order
               </button>
             </div>
           </form>
@@ -508,19 +420,39 @@ export default function PublicOrderInterface({
       {/* 3-Column Dashboard */}
       <div className="flex-1 overflow-hidden p-6">
         <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-3">
-          {/* COL 1: PREP (Monitor) */}
+          {/* COL 1: PREP (Live Prep Queue) */}
           <div className="flex flex-col rounded-2xl bg-white shadow-xl">
             <div className="rounded-t-2xl border-b border-gray-100 bg-yellow-50 p-4">
               <h2 className="flex items-center justify-between text-lg font-bold text-yellow-900">
                 <span>👨‍🍳 Prep</span>
                 <span className="rounded-full bg-yellow-200 px-2 py-0.5 text-sm">
-                  {prepOrders.length}
+                  {newOrders.length + activePrepOrders.length}
                 </span>
               </h2>
             </div>
             <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
-              {prepOrders.map((o) => renderOrderCard(o, 'PREP'))}
-              {prepOrders.length === 0 && (
+              {/* NEW / INCOMING SECTION */}
+              {newOrders.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="mb-2 text-xs font-black tracking-wider text-blue-600 uppercase">
+                    Incoming ({newOrders.length})
+                  </h3>
+                  {newOrders.map((o) => renderOrderCard(o, 'NEW'))}
+                  <div className="my-4 border-t border-dashed border-gray-300"></div>
+                </div>
+              )}
+
+              {/* ACTIVE PREP SECTION */}
+              {activePrepOrders.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="mb-2 text-xs font-black tracking-wider text-indigo-600 uppercase">
+                    In Prep ({activePrepOrders.length})
+                  </h3>
+                  {activePrepOrders.map((o) => renderOrderCard(o, 'PREP'))}
+                </div>
+              )}
+
+              {newOrders.length === 0 && activePrepOrders.length === 0 && (
                 <div className="py-10 text-center text-gray-400">
                   No orders in Prep
                 </div>

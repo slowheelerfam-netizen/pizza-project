@@ -4,11 +4,11 @@ import { ORDER_STATUS } from '../types/models'
  * Canonical, linear order flow.
  * No legacy states. No branching. No skipping.
  *
- * NEW → MONITOR → OVEN → READY
+ * NEW → PREP → OVEN → READY
  */
 const STATUS_SEQUENCE = [
   ORDER_STATUS.NEW,
-  ORDER_STATUS.MONITOR,
+  ORDER_STATUS.PREP,
   ORDER_STATUS.OVEN,
   ORDER_STATUS.READY,
   ORDER_STATUS.COMPLETED,
@@ -23,7 +23,7 @@ export function isValidTransition(orderOrStatus, nextStatus) {
   if (!currentStatus) return false
   if (currentStatus === nextStatus) return false
 
-  // Allow skipping MONITOR (Prep) if advancing directly from Register
+  // Allow skipping PREP (Prep) if advancing directly from Register
   if (currentStatus === ORDER_STATUS.NEW && nextStatus === ORDER_STATUS.OVEN) {
     return true
   }
@@ -31,7 +31,7 @@ export function isValidTransition(orderOrStatus, nextStatus) {
   const currentIndex = STATUS_SEQUENCE.indexOf(currentStatus)
   const nextIndex = STATUS_SEQUENCE.indexOf(nextStatus)
 
-  // Reject unknown / legacy statuses (PREP, IN_PREP, CONFIRMED, etc.)
+  // Reject unknown / legacy statuses (IN_PREP, CONFIRMED, etc.)
   if (currentIndex === -1 || nextIndex === -1) return false
 
   // Only allow strict forward movement by one step
