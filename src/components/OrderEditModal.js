@@ -121,7 +121,7 @@ export default function OrderEditModal({
             <button
               onClick={() => handleWorkflowAction(ORDER_STATUS.OVEN)}
               disabled={isPending}
-              className="w-full rounded-lg bg-orange-500 py-3 font-bold text-white disabled:opacity-50"
+              className="w-full rounded bg-orange-100 px-2 py-1 text-xs font-bold text-orange-700 hover:bg-orange-200 disabled:opacity-50"
             >
               Send to OVEN
             </button>
@@ -131,9 +131,36 @@ export default function OrderEditModal({
             <button
               onClick={() => handleWorkflowAction(ORDER_STATUS.READY)}
               disabled={isPending}
-              className="w-full rounded-lg bg-green-600 py-3 font-bold text-white disabled:opacity-50"
+              className="w-full rounded bg-green-100 px-2 py-1 text-xs font-bold text-green-700 hover:bg-green-200 disabled:opacity-50"
             >
               Start BOXING
+            </button>
+          )}
+        </div>
+      )
+    }
+
+    /** OVEN (Added to support OVEN view context) */
+    if (viewContext === 'OVEN') {
+      return (
+        <div className="space-y-4 rounded-xl bg-orange-50 p-4">
+          {order.status === ORDER_STATUS.OVEN && (
+            <button
+              onClick={() => handleWorkflowAction(ORDER_STATUS.READY)}
+              disabled={isPending}
+              className="w-full rounded bg-green-100 px-2 py-1 text-xs font-bold text-green-700 hover:bg-green-200 disabled:opacity-50"
+            >
+              Start BOXING
+            </button>
+          )}
+
+          {order.status === ORDER_STATUS.READY && (
+            <button
+              onClick={() => handleWorkflowAction(ORDER_STATUS.COMPLETED)}
+              disabled={isPending}
+              className="w-full rounded bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+            >
+              COMPLETE Order
             </button>
           )}
         </div>
@@ -173,7 +200,10 @@ export default function OrderEditModal({
               <span className="rounded-lg bg-gray-100 px-4 py-2 text-3xl font-black text-gray-800">
                 #{order.displayId}
               </span>
-              <button onClick={onClose} className="ml-4 text-2xl font-bold text-gray-400 hover:text-red-500">
+              <button
+                onClick={onClose}
+                className="ml-4 text-2xl font-bold text-gray-400 hover:text-red-500"
+              >
                 ✕
               </button>
             </div>
@@ -195,7 +225,9 @@ export default function OrderEditModal({
             )}
 
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-400 uppercase">Items</h3>
+              <h3 className="text-lg font-bold text-gray-400 uppercase">
+                Items
+              </h3>
               {order.items?.map((item, idx) => (
                 <div
                   key={idx}

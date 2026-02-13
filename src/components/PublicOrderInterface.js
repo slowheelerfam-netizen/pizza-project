@@ -76,6 +76,9 @@ export default function PublicOrderInterface({
             <div className="text-lg font-bold text-gray-900">
               {order.customerSnapshot?.name || 'Guest'}
             </div>
+            <div className="text-sm font-black text-gray-800">
+              {order.customerSnapshot?.phone || 'No Phone'}
+            </div>
             <div className="text-xs text-gray-500">
               #{order.displayId} • ${order.totalPrice.toFixed(2)}
             </div>

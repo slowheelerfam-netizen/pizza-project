@@ -35,9 +35,9 @@ export default function MonitorDisplay({ initialOrders }) {
   const renderCard = (order) => (
     <div
       key={order.id}
-      className="flex h-auto flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+      className="flex h-auto w-auto min-w-min flex-col rounded-lg border-2 border-gray-400 bg-white p-4 shadow-sm"
     >
-      <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-100 pb-2">
+      <div className="mb-2 grid grid-cols-2 gap-2 border-b-2 border-gray-300 pb-2">
         <div>
           <h3 className="text-xl font-black text-gray-900">
             {order.customerSnapshot?.name || 'Guest'}
@@ -61,36 +61,36 @@ export default function MonitorDisplay({ initialOrders }) {
 
       <div className="flex flex-1 flex-col gap-3">
         {order.specialInstructions && (
-          <div className="rounded-lg border-2 border-red-100 bg-red-50 p-3 text-lg font-black text-red-600">
+          <div className="rounded-lg border-2 border-red-100 bg-red-50 p-3 text-lg font-black whitespace-nowrap text-red-600">
             ⚠️ {order.specialInstructions}
           </div>
         )}
 
-        <ul className="space-y-3">
+        <ul className="flex flex-col gap-4">
           {order.items?.map((item, idx) => {
             const ingredients = getFullIngredients(item)
             return (
               <li
                 key={idx}
-                className="border-b border-gray-100 pb-2 last:border-0"
+                className="border-b-2 border-gray-300 pb-4 last:border-0 last:pb-0"
               >
-                <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-black text-gray-900">
-                    {item.quantity}x {item.name}
-                  </span>
-                  <span className="text-2xl font-black text-gray-800">
+                <div className="flex flex-col items-start gap-1">
+                  <span className="text-2xl font-black whitespace-nowrap text-gray-800 uppercase">
                     {item.size.split(' (')[0]}
+                  </span>
+                  <span className="text-2xl font-black whitespace-nowrap text-gray-900">
+                    {item.quantity}x {item.name}
                   </span>
                 </div>
 
                 {ingredients.length > 0 && (
-                  <div className="mt-1 pl-4 text-lg font-bold text-gray-600">
+                  <div className="mt-1 text-lg font-bold whitespace-nowrap text-gray-600">
                     {ingredients.join(', ')}
                   </div>
                 )}
 
                 {item.notes && (
-                  <div className="mt-1 pl-4 text-lg font-bold text-indigo-600 italic">
+                  <div className="mt-1 text-lg font-bold whitespace-nowrap text-indigo-600 italic">
                     "{item.notes}"
                   </div>
                 )}
@@ -126,7 +126,7 @@ export default function MonitorDisplay({ initialOrders }) {
             NO ACTIVE ORDERS
           </div>
         ) : (
-          <div className="grid grid-cols-5 items-start gap-6">
+          <div className="flex h-full flex-col flex-wrap content-start items-start gap-6 overflow-x-auto">
             {displayOrders.map((o) => renderCard(o))}
           </div>
         )}
