@@ -32,6 +32,7 @@ model Order {
   customerType    String   @default("PICKUP")
   customerAddress String?
   isWalkIn        Boolean  @default(false)
+  isPaid          Boolean  @default(false)
 
   // Staff assignment (by employee id or name for now)
   assignedTo      String?

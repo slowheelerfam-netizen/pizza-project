@@ -47,12 +47,8 @@ export default function OrderEditModal({
 
       // IMPORTANT:
       // - REGISTER uses assignment
-      // - KITCHEN must NOT pass assignment (was breaking PREP → OVEN)
-      if (viewContext === 'REGISTER') {
-        await onStatusUpdate(order.id, nextStatus, assignment || null)
-      } else {
-        await onStatusUpdate(order.id, nextStatus)
-      }
+      // - KITCHEN now also supports assignment
+      await onStatusUpdate(order.id, nextStatus, assignment || null)
 
       router.refresh()
       onClose()
@@ -61,9 +57,40 @@ export default function OrderEditModal({
 
   const renderWorkflowActions = () => {
     /** REGISTER */
-    if (viewContext === 'REGISTER') {
-      const available = employees.filter((e) => e.isOnDuty === true)
+    // 1. Assignment Section (Shared)
+    const available = employees.filter((e) => e.isOnDuty === true)
 
+    const assignmentSection = (
+      <div className="mb-4">
+        <label className="mb-1 block text-sm font-bold text-gray-700">
+          Assign Staff
+        </label>
+        <div className="flex gap-2">
+          <select
+            value={assignment}
+            onChange={(e) => setAssignment(e.target.value)}
+            className="w-full rounded-lg border-2 border-gray-300 p-2"
+          >
+            <option value="">-- Unassigned --</option>
+            {available.map((e) => (
+              <option key={e.id} value={e.name}>
+                {e.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => handleWorkflowAction(order.status)}
+            disabled={isPending || assignment === (order.assignedTo || '')}
+            className="rounded-lg bg-gray-200 px-3 font-bold text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    )
+
+    /** REGISTER */
+    if (viewContext === 'REGISTER') {
       return (
         <div className="space-y-6 rounded-xl bg-blue-50 p-4">
           <h3 className="text-sm font-bold text-blue-900 uppercase">
@@ -87,18 +114,7 @@ export default function OrderEditModal({
             <span className="text-lg font-black">High Priority</span>
           </label>
 
-          <select
-            value={assignment}
-            onChange={(e) => setAssignment(e.target.value)}
-            className="w-full rounded-lg border-2 border-gray-300 p-2"
-          >
-            <option value="">Assign Staff (optional)</option>
-            {available.map((e) => (
-              <option key={e.id} value={e.name}>
-                {e.name}
-              </option>
-            ))}
-          </select>
+          {assignmentSection}
 
           {order.status === ORDER_STATUS.NEW && (
             <button
@@ -117,15 +133,24 @@ export default function OrderEditModal({
     if (viewContext === 'KITCHEN') {
       return (
         <div className="space-y-4 rounded-xl bg-indigo-50 p-4">
-          {order.status === ORDER_STATUS.PREP && (
+          <h3 className="text-sm font-bold text-indigo-900 uppercase">
+            Kitchen Actions
+          </h3>
+
+          {assignmentSection}
+
+          {order.status === ORDER_STATUS.NEW && (
             <button
-              onClick={() => handleWorkflowAction(ORDER_STATUS.OVEN)}
+              onClick={() => handleWorkflowAction(ORDER_STATUS.PREP)}
               disabled={isPending}
-              className="w-full rounded bg-orange-100 px-2 py-1 text-xs font-bold text-orange-700 hover:bg-orange-200 disabled:opacity-50"
+              className="w-full rounded bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
             >
-              Send to OVEN
+              Start Prep
             </button>
           )}
+
+          {/* REMOVED PREP -> OVEN button here to prevent accidental advancement */}
+          {/* Use the card button in the main view instead */}
 
           {order.status === ORDER_STATUS.OVEN && (
             <button

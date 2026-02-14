@@ -15,6 +15,26 @@ export default function MonitorDisplay({ initialOrders }) {
     return () => clearInterval(interval)
   }, [router])
 
+  // Helper to generate consistent colors for chefs
+  const getChefColor = (name) => {
+    const colors = [
+      'bg-blue-600 text-white',
+      'bg-green-600 text-white',
+      'bg-purple-600 text-white',
+      'bg-pink-600 text-white',
+      'bg-indigo-600 text-white',
+      'bg-red-600 text-white',
+      'bg-teal-600 text-white',
+      'bg-orange-600 text-white',
+    ]
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const index = Math.abs(hash) % colors.length
+    return colors[index]
+  }
+
   // PREP orders only, sorted by creation time
   const displayOrders = initialOrders
     .filter((o) => o.status === 'PREP')
@@ -101,21 +121,30 @@ export default function MonitorDisplay({ initialOrders }) {
       </div>
 
       <div className="mt-3 text-center">
-        <span className="text-lg font-bold text-indigo-600">IN PREP</span>
+        {order.assignedTo && (
+          <div
+            className={`mb-2 flex items-center justify-center gap-2 rounded-lg px-4 py-2 shadow-sm ${getChefColor(order.assignedTo)}`}
+          >
+            <span className="text-sm font-black tracking-wider uppercase opacity-90">
+              Chef
+            </span>
+            <span className="text-2xl font-black">{order.assignedTo}</span>
+          </div>
+        )}
       </div>
     </div>
   )
 
   return (
-    <div className="flex h-screen flex-col bg-slate-100">
-      <header className="flex items-center justify-between bg-white px-6 py-3 shadow-sm">
-        <h1 className="text-3xl font-black text-indigo-900">
+    <div className="flex h-screen flex-col bg-slate-900">
+      <header className="flex items-center justify-between bg-slate-800 px-6 py-3 shadow-sm">
+        <h1 className="text-3xl font-black text-indigo-400">
           📺 LIVE PREP QUEUE{' '}
-          <span className="text-xl font-medium text-slate-400">
+          <span className="text-xl font-medium text-slate-500">
             | Kitchen Display
           </span>
         </h1>
-        <div className="text-xl font-bold text-gray-900">
+        <div className="text-xl font-bold text-gray-100">
           Orders: {displayOrders.length}
         </div>
       </header>

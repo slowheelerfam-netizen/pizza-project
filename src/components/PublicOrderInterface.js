@@ -1,17 +1,22 @@
 'use client'
 
 import { useState, useEffect, useOptimistic, startTransition } from 'react'
-import { MENU_ITEMS } from '../types/models'
+import { MENU_ITEMS, ORDER_STATUS } from '../types/models'
 import PizzaBuilderModal from './PizzaBuilderModal'
+import OrderEditModal from './OrderEditModal'
+import StaffAssignmentsModal from './StaffAssignmentsModal'
 
 export default function PublicOrderInterface({
   initialOrders = [],
   employees = [],
   updateStatusAction, // Passed from server component
   createOrderAction, // Passed from server component
+  updateOrderDetailsAction,
 }) {
   const [cart, setCart] = useState([])
   const [isBuilderOpen, setIsBuilderOpen] = useState(false)
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
+  const [editingOrder, setEditingOrder] = useState(null)
   const [selectedPizzaForBuilder, setSelectedPizzaForBuilder] = useState(
     MENU_ITEMS[0]
   )
@@ -37,6 +42,7 @@ export default function PublicOrderInterface({
   const [address, setAddress] = useState('')
   const [orderType, setOrderType] = useState('PICKUP')
   const [specialInstructions, setSpecialInstructions] = useState('')
+  // Removed payOnsite state
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderResult, setOrderResult] = useState(null)
 
@@ -61,15 +67,44 @@ export default function PublicOrderInterface({
     .filter((o) => o.status === 'READY')
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
 
+  console.log('DEBUG ORDERS:', {
+    total: optimisticOrders.length,
+    new: newOrders.length,
+    prep: activePrepOrders.length,
+    oven: ovenOrders.length,
+    ready: readyOrders.length,
+    sample: optimisticOrders[0],
+  })
+
   // Helper to render cards
   const renderOrderCard = (order, columnType) => {
     const isNew = order.status === 'NEW'
+    const statusBorderColor =
+      order.status === 'NEW'
+        ? 'border-l-blue-500'
+        : order.status === 'PREP'
+          ? 'border-l-indigo-500'
+          : order.status === 'OVEN'
+            ? 'border-l-orange-500'
+            : order.status === 'READY'
+              ? 'border-l-green-500'
+              : 'border-l-gray-200'
+
+    const handlePaymentUpdate = async (e) => {
+      e.stopPropagation()
+      if (confirm(`Mark order #${order.displayId} as PAID?`)) {
+        startTransition(() => {
+          addOptimisticOrder({ id: order.id, isPaid: true })
+        })
+        await updateOrderDetailsAction(order.id, { isPaid: true })
+      }
+    }
+
     return (
       <div
         key={order.id}
-        className={`mb-3 rounded-lg border bg-white p-3 shadow-sm transition-all ${
-          isNew ? 'border-l-4 border-l-blue-500' : ''
-        }`}
+        onClick={() => setEditingOrder(order)}
+        className={`mb-3 cursor-pointer rounded-lg border border-l-4 bg-white p-3 shadow-sm transition-all hover:shadow-md ${statusBorderColor}`}
       >
         <div className="flex items-start justify-between">
           <div className="">
@@ -81,12 +116,21 @@ export default function PublicOrderInterface({
             </div>
             <div className="text-xs text-gray-500">
               #{order.displayId} • ${order.totalPrice.toFixed(2)}
+              {order.isPaid ? (
+                <span className="ml-2 rounded bg-green-100 px-1 py-0.5 text-xs font-bold text-green-700">
+                  PAID
+                </span>
+              ) : (
+                order.customerSnapshot?.type === 'DINE_IN' && (
+                  <span
+                    onClick={handlePaymentUpdate}
+                    className="ml-2 cursor-pointer rounded bg-red-100 px-1 py-0.5 text-xs font-bold text-red-700 hover:bg-red-200"
+                  >
+                    UNPAID
+                  </span>
+                )
+              )}
             </div>
-            {isNew && (
-              <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
-                NEW
-              </span>
-            )}
             {order.assignedTo && (
               <div className="mt-1 text-xs font-medium text-indigo-600">
                 👨‍🍳 {order.assignedTo}
@@ -100,29 +144,33 @@ export default function PublicOrderInterface({
             {/* Action Button based on column */}
             {(columnType === 'PREP' || columnType === 'NEW') && (
               <>
-                <div className="flex gap-1">
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation()
-                      if (
-                        !confirm('Are you sure you want to cancel this order?')
-                      )
-                        return
-                      startTransition(() => {
-                        addOptimisticOrder({
-                          id: order.id,
-                          status: 'CANCELLED',
+                {columnType === 'NEW' && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        if (
+                          !confirm(
+                            'Are you sure you want to cancel this order?'
+                          )
+                        )
+                          return
+                        startTransition(() => {
+                          addOptimisticOrder({
+                            id: order.id,
+                            status: 'CANCELLED',
+                          })
                         })
-                      })
-                      if (updateStatusAction) {
-                        await updateStatusAction(order.id, 'CANCELLED')
-                      }
-                    }}
-                    className="rounded bg-red-100 px-2 py-1 text-xs font-bold text-red-600 hover:bg-red-200"
-                  >
-                    ✕
-                  </button>
-                </div>
+                        if (updateStatusAction) {
+                          await updateStatusAction(order.id, 'CANCELLED')
+                        }
+                      }}
+                      className="rounded bg-red-100 px-2 py-1 text-xs font-bold text-red-600 hover:bg-red-200"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
 
                 {order.status === 'NEW' ? (
                   <button
@@ -159,7 +207,8 @@ export default function PublicOrderInterface({
             )}
             {columnType === 'OVEN' && (
               <button
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.stopPropagation()
                   startTransition(() => {
                     addOptimisticOrder({ id: order.id, status: 'READY' })
                   })
@@ -174,7 +223,8 @@ export default function PublicOrderInterface({
             )}
             {columnType === 'READY' && (
               <button
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.stopPropagation()
                   startTransition(() => {
                     addOptimisticOrder({ id: order.id, status: 'COMPLETED' })
                   })
@@ -234,6 +284,8 @@ export default function PublicOrderInterface({
     formData.append('items', JSON.stringify(cart))
     formData.append('totalPrice', cartTotal.toString())
     formData.append('specialInstructions', specialInstructions)
+    // If Order Type is DINE_IN, isPaid is false (pay onsite/later). Otherwise (PICKUP), assume paid online (true).
+    formData.append('isPaid', (orderType !== 'DINE_IN').toString())
 
     if (createOrderAction) {
       result = await createOrderAction(null, formData)
@@ -319,29 +371,31 @@ export default function PublicOrderInterface({
                 <label className="mb-1 block text-sm font-extrabold text-black">
                   Order Type
                 </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 font-bold text-black">
-                    <input
-                      type="radio"
-                      name="type"
-                      value="PICKUP"
-                      checked={orderType === 'PICKUP'}
-                      onChange={(e) => setOrderType(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span>Pickup</span>
-                  </label>
-                  <label className="flex items-center gap-2 font-bold text-black">
-                    <input
-                      type="radio"
-                      name="type"
-                      value="DINE_IN"
-                      checked={orderType === 'DINE_IN'}
-                      onChange={(e) => setOrderType(e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span>Dine-in</span>
-                  </label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 font-bold text-black">
+                      <input
+                        type="radio"
+                        name="type"
+                        value="PICKUP"
+                        checked={orderType === 'PICKUP'}
+                        onChange={(e) => setOrderType(e.target.value)}
+                        className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span>Pickup</span>
+                    </label>
+                    <label className="flex items-center gap-2 font-bold text-black">
+                      <input
+                        type="radio"
+                        name="type"
+                        value="DINE_IN"
+                        checked={orderType === 'DINE_IN'}
+                        onChange={(e) => setOrderType(e.target.value)}
+                        className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span>Dine-in</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -411,29 +465,35 @@ export default function PublicOrderInterface({
 
   // --- MAIN REGISTER DASHBOARD ---
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-slate-900">
       {/* Header */}
-      <header className="z-10 flex items-center justify-between bg-white px-6 py-3 shadow-sm">
-        <h1 className="text-xl font-black tracking-tight text-indigo-900">
-          🍕 Don&apos;s Pizza{' '}
-          <span className="font-medium text-slate-400">| Register</span>
+      <header className="z-10 flex items-center justify-between bg-slate-800 px-6 py-3 shadow-sm">
+        <h1 className="text-xl font-black tracking-tight text-indigo-400">
+          🍕 Pizza Planet{' '}
+          <span className="font-medium text-slate-500">| Register</span>
         </h1>
+        <button
+          onClick={() => setIsStaffModalOpen(true)}
+          className="rounded-lg bg-indigo-900/50 px-4 py-2 text-sm font-bold text-indigo-300 hover:bg-indigo-900"
+        >
+          Staff Assignments
+        </button>
       </header>
 
       {/* 3-Column Dashboard */}
       <div className="flex-1 overflow-hidden p-6">
         <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-3">
           {/* COL 1: PREP (Live Prep Queue) */}
-          <div className="flex flex-col rounded-2xl bg-white shadow-xl">
-            <div className="rounded-t-2xl border-b border-gray-100 bg-yellow-50 p-4">
-              <h2 className="flex items-center justify-between text-lg font-bold text-yellow-900">
+          <div className="flex flex-col rounded-2xl bg-slate-800 shadow-xl">
+            <div className="rounded-t-2xl border-b border-slate-700 bg-yellow-900/20 p-4">
+              <h2 className="flex items-center justify-between text-lg font-bold text-yellow-400">
                 <span>👨‍🍳 Prep</span>
-                <span className="rounded-full bg-yellow-200 px-2 py-0.5 text-sm">
+                <span className="rounded-full bg-yellow-900/40 px-2 py-0.5 text-sm text-yellow-200">
                   {newOrders.length + activePrepOrders.length}
                 </span>
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
+            <div className="flex-1 overflow-y-auto bg-transparent p-4">
               {/* NEW / INCOMING SECTION */}
               {newOrders.length > 0 && (
                 <div className="mb-4">
@@ -448,7 +508,7 @@ export default function PublicOrderInterface({
               {/* ACTIVE PREP SECTION */}
               {activePrepOrders.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="mb-2 text-xs font-black tracking-wider text-indigo-600 uppercase">
+                  <h3 className="mb-2 text-xs font-black tracking-wider text-indigo-400 uppercase">
                     In Prep ({activePrepOrders.length})
                   </h3>
                   {activePrepOrders.map((o) => renderOrderCard(o, 'PREP'))}
@@ -456,7 +516,7 @@ export default function PublicOrderInterface({
               )}
 
               {newOrders.length === 0 && activePrepOrders.length === 0 && (
-                <div className="py-10 text-center text-gray-400">
+                <div className="py-10 text-center text-slate-500">
                   No orders in Prep
                 </div>
               )}
@@ -464,19 +524,19 @@ export default function PublicOrderInterface({
           </div>
 
           {/* COL 2: OVEN */}
-          <div className="flex flex-col rounded-2xl bg-white shadow-xl">
-            <div className="rounded-t-2xl border-b border-gray-100 bg-orange-50 p-4">
-              <h2 className="flex items-center justify-between text-lg font-bold text-orange-900">
+          <div className="flex flex-col rounded-2xl bg-slate-800 shadow-xl">
+            <div className="rounded-t-2xl border-b border-slate-700 bg-orange-900/20 p-4">
+              <h2 className="flex items-center justify-between text-lg font-bold text-orange-400">
                 <span>🔥 Oven</span>
-                <span className="rounded-full bg-orange-200 px-2 py-0.5 text-sm">
+                <span className="rounded-full bg-orange-900/40 px-2 py-0.5 text-sm text-orange-200">
                   {ovenOrders.length}
                 </span>
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
+            <div className="flex-1 overflow-y-auto bg-transparent p-4">
               {ovenOrders.map((o) => renderOrderCard(o, 'OVEN'))}
               {ovenOrders.length === 0 && (
-                <div className="py-10 text-center text-gray-400">
+                <div className="py-10 text-center text-slate-500">
                   No orders in Oven
                 </div>
               )}
@@ -484,19 +544,19 @@ export default function PublicOrderInterface({
           </div>
 
           {/* COL 3: READY */}
-          <div className="flex flex-col rounded-2xl bg-white shadow-xl">
-            <div className="rounded-t-2xl border-b border-gray-100 bg-green-50 p-4">
-              <h2 className="flex items-center justify-between text-lg font-bold text-green-900">
+          <div className="flex flex-col rounded-2xl bg-slate-800 shadow-xl">
+            <div className="rounded-t-2xl border-b border-slate-700 bg-green-900/20 p-4">
+              <h2 className="flex items-center justify-between text-lg font-bold text-green-400">
                 <span>✅ Ready</span>
-                <span className="rounded-full bg-green-200 px-2 py-0.5 text-sm">
+                <span className="rounded-full bg-green-900/40 px-2 py-0.5 text-sm text-green-200">
                   {readyOrders.length}
                 </span>
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
+            <div className="flex-1 overflow-y-auto bg-transparent p-4">
               {readyOrders.map((o) => renderOrderCard(o, 'READY'))}
               {readyOrders.length === 0 && (
-                <div className="py-10 text-center text-gray-400">
+                <div className="py-10 text-center text-slate-500">
                   No ready orders
                 </div>
               )}
@@ -516,22 +576,50 @@ export default function PublicOrderInterface({
         selectedPizza={selectedPizzaForBuilder}
       />
 
+      <StaffAssignmentsModal
+        isOpen={isStaffModalOpen}
+        onClose={() => setIsStaffModalOpen(false)}
+        employees={employees}
+      />
+
+      {/* ORDER EDIT MODAL */}
+      <OrderEditModal
+        order={editingOrder}
+        isOpen={!!editingOrder}
+        onClose={() => setEditingOrder(null)}
+        viewContext="REGISTER"
+        employees={employees}
+        onStatusUpdate={async (orderId, newStatus, assignedTo) => {
+          startTransition(() => {
+            addOptimisticOrder({
+              id: orderId,
+              status: newStatus,
+              assignedTo: assignedTo,
+            })
+          })
+          if (updateStatusAction) {
+            await updateStatusAction(orderId, newStatus, assignedTo)
+          }
+          setEditingOrder(null)
+        }}
+      />
+
       {/* CART SUMMARY / CHECKOUT TRIGGER / FOOTER NAV */}
       {!isBuilderOpen && !isCheckoutMode && (
-        <div className="fixed right-0 bottom-0 left-0 z-40 border-t bg-white p-4 shadow-2xl">
+        <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-slate-700 bg-slate-800 p-4 shadow-2xl">
           <div className="mx-auto flex max-w-4xl items-center justify-between">
             {/* Left side: Cart info or Placeholder */}
             {cart.length > 0 ? (
               <div className="flex items-center gap-4">
-                <div className="font-bold text-gray-900">
+                <div className="font-bold text-gray-100">
                   Current Order: {cart.length} items
                 </div>
-                <div className="text-xl font-black text-indigo-600">
+                <div className="text-xl font-black text-indigo-400">
                   ${cartTotal.toFixed(2)}
                 </div>
               </div>
             ) : (
-              <div className="font-bold text-gray-500">
+              <div className="font-bold text-gray-400">
                 Start a new order...
               </div>
             )}
@@ -552,7 +640,7 @@ export default function PublicOrderInterface({
               {/* 2. Add Items */}
               <button
                 onClick={() => setIsBuilderOpen(true)}
-                className="rounded-lg border-2 border-gray-300 px-4 py-2 font-bold text-gray-700 hover:bg-gray-50"
+                className="rounded-lg border-2 border-slate-600 px-4 py-2 font-bold text-slate-200 hover:bg-slate-700"
               >
                 Add Items
               </button>

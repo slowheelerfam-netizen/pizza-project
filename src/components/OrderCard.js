@@ -3,17 +3,33 @@ import React from 'react'
 export default function OrderCard({
   order,
   onClick,
+  onStatusClick,
+  onPaymentClick,
   showIngredients = false,
   ...props
 }) {
+  const handleStatusClick = (e) => {
+    if (onStatusClick) {
+      e.stopPropagation()
+      e.preventDefault()
+      onStatusClick(order)
+    }
+  }
+
   return (
     <div
       onClick={onClick}
       {...props}
-      className={`mb-3 cursor-pointer rounded-lg border bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
+      className={`mb-3 cursor-pointer rounded-lg border border-l-4 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
         order.status === 'NEW'
-          ? 'border-l-4 border-l-blue-500'
-          : 'border-gray-200'
+          ? 'border-l-blue-500'
+          : order.status === 'PREP'
+            ? 'border-l-indigo-500'
+            : order.status === 'OVEN'
+              ? 'border-l-orange-500'
+              : order.status === 'READY'
+                ? 'border-l-green-500'
+                : 'border-l-gray-200'
       }`}
     >
       <div className="flex items-start justify-between">
@@ -29,8 +45,11 @@ export default function OrderCard({
                 {order.customerSnapshot?.phone || 'No Phone'}
               </p>
             </div>
-            <span
+            <button
+              onClick={handleStatusClick}
               className={`rounded px-2 py-1 text-xs font-bold whitespace-nowrap ${
+                onStatusClick ? 'cursor-pointer hover:opacity-80' : ''
+              } ${
                 order.status === 'NEW'
                   ? 'bg-blue-100 text-blue-800'
                   : order.status === 'PREP'
@@ -42,8 +61,16 @@ export default function OrderCard({
                         : 'bg-gray-100 text-gray-700'
               }`}
             >
-              {order.status}
-            </span>
+              {order.status === 'NEW'
+                ? 'Start Prep'
+                : order.status === 'PREP'
+                  ? 'Send to Oven'
+                  : order.status === 'OVEN'
+                    ? 'Start Boxing'
+                    : order.status === 'READY'
+                      ? 'Complete'
+                      : order.status}
+            </button>
           </div>
 
           <div className="mt-1 flex items-center text-sm text-gray-500">
@@ -56,6 +83,27 @@ export default function OrderCard({
                 minute: '2-digit',
               })}
             </span>
+            {order.isPaid ? (
+              <span className="ml-2 rounded bg-green-100 px-1 py-0.5 text-xs font-bold text-green-700">
+                PAID
+              </span>
+            ) : (
+              order.customerSnapshot?.type === 'DINE_IN' && (
+                <span
+                  onClick={(e) => {
+                    if (onPaymentClick) {
+                      e.stopPropagation()
+                      onPaymentClick(order)
+                    }
+                  }}
+                  className={`ml-2 rounded bg-red-100 px-1 py-0.5 text-xs font-bold text-red-700 ${
+                    onPaymentClick ? 'cursor-pointer hover:bg-red-200' : ''
+                  }`}
+                >
+                  UNPAID
+                </span>
+              )
+            )}
           </div>
 
           <div className="mt-2 flex items-center justify-between">

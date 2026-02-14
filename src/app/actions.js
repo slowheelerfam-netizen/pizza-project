@@ -18,6 +18,7 @@ export async function createOrderAction(_, formData) {
     isPriority: formData.get('isPriority') === 'true',
     items: JSON.parse(formData.get('items') || '[]'),
     totalPrice: Number(formData.get('totalPrice') || 0),
+    isPaid: formData.get('isPaid') === 'true',
     source: 'REGISTER',
     specialInstructions: formData.get('specialInstructions'),
   }

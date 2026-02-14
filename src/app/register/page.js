@@ -4,6 +4,7 @@ import {
   fetchDashboardData,
   updateStatusAction,
   createOrderAction,
+  updateOrderDetailsAction,
   checkCustomerWarningAction,
 } from '../actions'
 import PublicOrderInterface from '@/components/PublicOrderInterface'
@@ -22,6 +23,7 @@ export default async function RegisterPage() {
       warnings={warnings}
       createOrderAction={createOrderAction}
       updateStatusAction={updateStatusAction}
+      updateOrderDetailsAction={updateOrderDetailsAction}
       checkCustomerWarningAction={checkCustomerWarningAction}
     />
   )

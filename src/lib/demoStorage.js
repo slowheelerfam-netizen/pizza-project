@@ -113,8 +113,27 @@ export const demoStorage = {
     const emp = employees.find((e) => e.id === id)
     if (emp) {
       emp.isOnDuty = isOnDuty
+      if (isOnDuty) {
+        emp.lastPunchTime = new Date().toISOString()
+      }
       localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(employees))
     }
+  },
+
+  // --- SETTINGS ---
+  getSettings: () => {
+    if (!isBrowser) return {}
+    try {
+      const stored = localStorage.getItem('pizza-system-settings')
+      return stored ? JSON.parse(stored) : {}
+    } catch (e) {
+      return {}
+    }
+  },
+
+  saveSettings: (settings) => {
+    if (!isBrowser) return
+    localStorage.setItem('pizza-system-settings', JSON.stringify(settings))
   },
 
   deleteEmployee: (id) => {

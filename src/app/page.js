@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import PublicOrderInterface from '../components/PublicOrderInterface'
-import { createOrderAction, updateStatusAction, fetchDashboardData } from './actions'
+import CustomerOrderInterface from '../components/CustomerOrderInterface'
+import { createOrderAction } from './actions'
 
 export const metadata = {
   title: "Order Pizza | Don's Pizza Shop",
@@ -10,10 +10,6 @@ export const metadata = {
 }
 
 export default async function Home() {
-  const data = await fetchDashboardData()
-  const orders = data?.orders || []
-  const employees = data?.employees || []
-
   return (
     <main className="relative min-h-screen">
       {/* Background Image */}
@@ -29,8 +25,8 @@ export default async function Home() {
         <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-[2px]" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex min-h-screen flex-col">
+      <div className="relative z-10">
+        {/* Dev Navigation */}
         <header className="sticky top-0 z-50 border-b border-white/10 bg-black/20 px-4 py-4 backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-4">
             <Link
@@ -60,17 +56,7 @@ export default async function Home() {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-12 lg:px-8">
-          <h1 className="relative z-50 mb-8 text-center text-4xl font-extrabold text-white drop-shadow-lg">
-            Future Website interface
-          </h1>
-          <PublicOrderInterface 
-            initialOrders={orders}
-            employees={employees}
-            createOrderAction={createOrderAction}
-            updateStatusAction={updateStatusAction}
-          />
-        </div>
+        <CustomerOrderInterface createOrderAction={createOrderAction} />
       </div>
     </main>
   )

@@ -59,6 +59,7 @@ export class OrderService {
       source: source || 'REGISTER',
       items,
       totalPrice,
+      isPaid: !!input.isPaid,
       isPriority: !!input.isPriority,
       createdAt: new Date().toISOString(),
       updatedAt: null,
@@ -67,7 +68,7 @@ export class OrderService {
       customerSnapshot,
       assignedTo: null,
     }
-    
+
     const created = await this.orders.create(order)
     return created
   }
@@ -76,10 +77,18 @@ export class OrderService {
     const order = await this.orders.findById(orderId)
     if (!order) throw new Error(`Order ${orderId} not found`)
 
+    // Allow updating assignment without changing status
+    if (order.status === newStatus) {
+      if (assignedTo !== null) {
+        order.assignedTo = assignedTo
+        order.updatedAt = new Date().toISOString()
+        await this.orders.update(order)
+      }
+      return order
+    }
+
     if (!isValidTransition(order.status, newStatus)) {
-      throw new Error(
-        `Invalid transition from ${order.status} to ${newStatus}`
-      )
+      throw new Error(`Invalid transition from ${order.status} to ${newStatus}`)
     }
 
     order.status = newStatus
@@ -122,8 +131,8 @@ export class OrderService {
     if (updates.totalPrice !== undefined) order.totalPrice = updates.totalPrice
     if (updates.createdAt) order.createdAt = updates.createdAt
     if (updates.isPriority !== undefined) order.isPriority = updates.isPriority
-    if (updates.assignedTo !== undefined)
-      order.assignedTo = updates.assignedTo
+    if (updates.isPaid !== undefined) order.isPaid = updates.isPaid
+    if (updates.assignedTo !== undefined) order.assignedTo = updates.assignedTo
 
     order.updatedAt = new Date().toISOString()
     await this.orders.update(order)
@@ -139,11 +148,7 @@ export class OrderService {
     comment,
     assignedTo = null
   ) {
-    const updatedOrder = await this.updateStatus(
-      orderId,
-      newStatus,
-      assignedTo
-    )
+    const updatedOrder = await this.updateStatus(orderId, newStatus, assignedTo)
 
     const actionLog = logAdminAction(
       adminId,
@@ -158,5 +163,3 @@ export class OrderService {
     return { order: updatedOrder, actionLog }
   }
 }
-
-

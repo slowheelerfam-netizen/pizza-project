@@ -1,5 +1,9 @@
 import { unstable_noStore } from 'next/cache'
-import { fetchDashboardData, updateStatusAction } from '../actions'
+import {
+  fetchDashboardData,
+  updateStatusAction,
+  updateOrderDetailsAction,
+} from '../actions'
 import ChefDisplay from '@/components/ChefDisplay'
 import { ORDER_STATUS } from '@/types/models'
 
@@ -24,7 +28,8 @@ export default async function KitchenPage() {
     (order) =>
       order.status === ORDER_STATUS.NEW ||
       order.status === ORDER_STATUS.PREP ||
-      order.status === ORDER_STATUS.OVEN
+      order.status === ORDER_STATUS.OVEN ||
+      order.status === ORDER_STATUS.READY
   )
 
   return (
@@ -33,6 +38,7 @@ export default async function KitchenPage() {
         orders={kitchenOrders}
         employees={safeEmployees}
         updateStatusAction={updateStatusAction}
+        updateOrderDetailsAction={updateOrderDetailsAction}
         viewContext="KITCHEN"
       />
     </main>

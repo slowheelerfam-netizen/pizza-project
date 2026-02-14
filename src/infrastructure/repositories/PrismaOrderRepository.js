@@ -56,6 +56,7 @@ export class PrismaOrderRepository {
         customerType: customerSnapshot?.type || 'PICKUP',
         customerAddress: isDemo ? null : customerSnapshot?.address || null,
         isWalkIn: customerSnapshot?.isWalkIn ?? false,
+        isPaid: rest.isPaid ?? false,
         specialInstructions: rest.specialInstructions || null,
         items: {
           create: items.map((item) => ({
@@ -91,6 +92,7 @@ export class PrismaOrderRepository {
       customerType: order.customerSnapshot?.type,
       customerAddress: order.customerSnapshot?.address,
       isWalkIn: order.customerSnapshot?.isWalkIn,
+      isPaid: order.isPaid,
     }
 
     // Conditionally add time-tracking fields if they are present in the domain object
@@ -182,6 +184,7 @@ export class PrismaOrderRepository {
       specialInstructions: prismaOrder.specialInstructions,
       updatedAt: prismaOrder.updatedAt.toISOString(),
       isDemo: prismaOrder.source === 'DEMO',
+      isPaid: prismaOrder.isPaid,
       customerSnapshot: {
         name: prismaOrder.customerName,
         phone: prismaOrder.customerPhone,
