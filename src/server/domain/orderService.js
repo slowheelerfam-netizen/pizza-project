@@ -4,6 +4,7 @@ import { handleOrderReadiness } from '@/domain/orderReadiness'
 import { handleOvenEntry } from '@/domain/ovenHooks'
 import { logAdminAction } from '@/domain/adminActionService'
 import crypto from 'crypto'
+import { getPrisma } from '@/server/services/prismaClient'
 
 export class OrderService {
   constructor(
@@ -16,6 +17,7 @@ export class OrderService {
     this.warnings = warningsRepository
     this.actions = adminActionRepository
     this.notifications = notificationsRepository
+    this.prisma = getPrisma()
   }
 
   async createOrder(input) {
@@ -69,6 +71,10 @@ export class OrderService {
       assignedTo: null,
     }
 
+    if (this.prisma) {
+      // Optional: persist to DB if DATABASE_URL exists
+    }
+
     const created = await this.orders.create(order)
     return created
   }
@@ -77,7 +83,6 @@ export class OrderService {
     const order = await this.orders.findById(orderId)
     if (!order) throw new Error(`Order ${orderId} not found`)
 
-    // Allow updating assignment without changing status
     if (order.status === newStatus) {
       if (assignedTo !== null) {
         order.assignedTo = assignedTo
@@ -163,3 +168,5 @@ export class OrderService {
     return { order: updatedOrder, actionLog }
   }
 }
+
+

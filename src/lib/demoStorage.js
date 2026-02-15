@@ -28,13 +28,13 @@ export const demoStorage = {
     // If update, replace; if new, add
     const existingIndex = orders.findIndex((o) => o.id === order.id)
 
-    // Add missing fields if this is a raw form object
+    const now = new Date().toISOString()
     const completeOrder = {
       ...order,
       id: order.id || `local-${Date.now()}`,
       status: order.status || 'NEW',
-      createdAt: order.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: order.createdAt || now,
+      updatedAt: now,
       items: order.items || [],
       customerSnapshot: order.customerSnapshot || {},
       totalPrice: order.totalPrice || 0,
@@ -100,7 +100,7 @@ export const demoStorage = {
       id: `emp-${Date.now()}`,
       name,
       role,
-      isOnDuty: true, // Default to TRUE for better UX
+      isOnDuty: true,
     }
     employees.push(newEmp)
     localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(employees))
@@ -120,6 +120,12 @@ export const demoStorage = {
     }
   },
 
+  deleteEmployee: (id) => {
+    if (!isBrowser) return
+    const employees = demoStorage.getEmployees().filter((e) => e.id !== id)
+    localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(employees))
+  },
+
   // --- SETTINGS ---
   getSettings: () => {
     if (!isBrowser) return {}
@@ -134,12 +140,6 @@ export const demoStorage = {
   saveSettings: (settings) => {
     if (!isBrowser) return
     localStorage.setItem('pizza-system-settings', JSON.stringify(settings))
-  },
-
-  deleteEmployee: (id) => {
-    if (!isBrowser) return
-    const employees = demoStorage.getEmployees().filter((e) => e.id !== id)
-    localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(employees))
   },
 
   // --- ACTIONS (Audit Log) ---
@@ -161,8 +161,8 @@ export const demoStorage = {
       timestamp: new Date().toISOString(),
       ...action,
     }
-    // Keep last 50 actions
     const updatedActions = [...actions, newAction].slice(-50)
     localStorage.setItem(KEYS.ACTIONS, JSON.stringify(updatedActions))
   },
 }
+
