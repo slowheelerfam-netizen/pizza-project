@@ -1,10 +1,11 @@
 {
   "functions": {
     "app/**": {
-      "runtime": "nodejs24.x"
+      "runtime": "nodejs"
     }
   }
 }
+
 
 
 
