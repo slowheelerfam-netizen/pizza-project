@@ -5,41 +5,23 @@ import { handleOvenEntry } from '@/domain/ovenHooks'
 import { logAdminAction } from '@/domain/adminActionService'
 import crypto from 'crypto'
 import { DEMO_MODE } from '@/lib/demoMode'
-
-let prismaClient = null
-if (!DEMO_MODE) {
-  prismaClient = require('@/lib/prisma').getPrisma()
-}
+import { getPrisma } from '@/lib/prisma'
 
 export class OrderService {
-  constructor(
-    ordersRepository,
-    warningsRepository,
-    adminActionRepository,
-    notificationsRepository
-  ) {
+  constructor(ordersRepository, warningsRepository, adminActionRepository, notificationsRepository) {
     this.orders = ordersRepository
     this.warnings = warningsRepository
     this.actions = adminActionRepository
     this.notifications = notificationsRepository
-    this.prisma = prismaClient
+    this.prisma = DEMO_MODE ? null : getPrisma()
   }
 
   async createOrder(input) {
-    const {
-      customerName,
-      customerPhone,
-      type,
-      address,
-      source,
-      items,
-      totalPrice,
-    } = input
+    const { customerName, customerPhone, type, address, source, items, totalPrice } = input
 
     const customerSnapshot = {
       customerId: null,
-      name:
-        customerName && customerName.trim() ? customerName.trim() : 'Walk-in',
+      name: customerName && customerName.trim() ? customerName.trim() : 'Walk-in',
       phone: customerPhone || null,
       type: type || 'PICKUP',
       address: address || null,
@@ -47,14 +29,11 @@ export class OrderService {
     }
 
     const allOrders = await this.orders.getAll()
-    const lastOrder =
-      allOrders.length > 0
-        ? allOrders.reduce((latest, current) =>
-            new Date(current.createdAt) > new Date(latest.createdAt)
-              ? current
-              : latest
-          )
-        : null
+    const lastOrder = allOrders.length > 0
+      ? allOrders.reduce((latest, current) =>
+          new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
+        )
+      : null
 
     const nextDisplayId = lastOrder ? (lastOrder.displayId % 50) + 1 : 1
 
@@ -80,8 +59,7 @@ export class OrderService {
       // Optional: persist to DB if not in DEMO_MODE
     }
 
-    const created = await this.orders.create(order)
-    return created
+    return await this.orders.create(order)
   }
 
   async updateStatus(orderId, newStatus, assignedTo = null) {
@@ -105,23 +83,13 @@ export class OrderService {
     if (assignedTo !== null) order.assignedTo = assignedTo
     order.updatedAt = new Date().toISOString()
 
-    if (newStatus === ORDER_STATUS.OVEN) {
-      order.ovenEnteredAt = new Date().toISOString()
-    }
-
-    if (newStatus === ORDER_STATUS.READY) {
-      order.actualReadyAt = new Date().toISOString()
-    }
+    if (newStatus === ORDER_STATUS.OVEN) order.ovenEnteredAt = new Date().toISOString()
+    if (newStatus === ORDER_STATUS.READY) order.actualReadyAt = new Date().toISOString()
 
     await this.orders.update(order)
 
-    if (newStatus === ORDER_STATUS.OVEN) {
-      await handleOvenEntry(order, this.notifications)
-    }
-
-    if (newStatus === ORDER_STATUS.READY) {
-      await handleOrderReadiness(order, null, this.notifications)
-    }
+    if (newStatus === ORDER_STATUS.OVEN) await handleOvenEntry(order, this.notifications)
+    if (newStatus === ORDER_STATUS.READY) await handleOrderReadiness(order, null, this.notifications)
 
     return order
   }
@@ -131,10 +99,7 @@ export class OrderService {
     if (!order) throw new Error(`Order ${orderId} not found`)
 
     if (updates.customerSnapshot) {
-      order.customerSnapshot = {
-        ...order.customerSnapshot,
-        ...updates.customerSnapshot,
-      }
+      order.customerSnapshot = { ...order.customerSnapshot, ...updates.customerSnapshot }
     }
 
     if (updates.items) order.items = updates.items
@@ -150,14 +115,7 @@ export class OrderService {
     return order
   }
 
-  async adminOverrideStatus(
-    adminId,
-    orderId,
-    newStatus,
-    reason,
-    comment,
-    assignedTo = null
-  ) {
+  async adminOverrideStatus(adminId, orderId, newStatus, reason, comment, assignedTo = null) {
     const updatedOrder = await this.updateStatus(orderId, newStatus, assignedTo)
 
     const actionLog = logAdminAction(
@@ -169,10 +127,11 @@ export class OrderService {
     )
 
     await this.actions.create(actionLog)
-
     return { order: updatedOrder, actionLog }
   }
 }
+
+
 
 
 

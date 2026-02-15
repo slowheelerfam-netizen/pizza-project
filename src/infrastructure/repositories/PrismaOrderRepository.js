@@ -1,5 +1,7 @@
-import prisma from '../../lib/prisma'
+import { getPrisma } from '@/lib/prisma'
 import { DEMO_MODE } from '../../lib/appConfig'
+
+const prisma = getPrisma()
 
 export class PrismaOrderRepository {
   async getAll() {
@@ -80,12 +82,11 @@ export class PrismaOrderRepository {
   }
 
   async update(order) {
-    // Only update fields that exist in the Order object and schema
     const dataToUpdate = {
       status: order.status,
       totalPrice: order.totalPrice,
       updatedAt: new Date(),
-      assignedTo: order.assignedTo, // Ensure assignedTo is persisted
+      assignedTo: order.assignedTo,
       specialInstructions: order.specialInstructions,
       customerName: order.customerSnapshot?.name,
       customerPhone: order.customerSnapshot?.phone,
@@ -95,19 +96,10 @@ export class PrismaOrderRepository {
       isPaid: order.isPaid,
     }
 
-    // Conditionally add time-tracking fields if they are present in the domain object
-    if (order.ovenEnteredAt) {
-      dataToUpdate.ovenEnteredAt = order.ovenEnteredAt
-    }
-    if (order.actualReadyAt) {
-      dataToUpdate.actualReadyAt = order.actualReadyAt
-    }
-    if (order.estimatedReadyAt) {
-      dataToUpdate.estimatedReadyAt = order.estimatedReadyAt
-    }
+    if (order.ovenEnteredAt) dataToUpdate.ovenEnteredAt = order.ovenEnteredAt
+    if (order.actualReadyAt) dataToUpdate.actualReadyAt = order.actualReadyAt
+    if (order.estimatedReadyAt) dataToUpdate.estimatedReadyAt = order.estimatedReadyAt
 
-    // Handle items update if provided (Delete all and recreate strategy)
-    // Note: This requires the order object to have the full list of current items
     let itemsUpdate = {}
     if (order.items && Array.isArray(order.items)) {
       itemsUpdate = {
@@ -144,12 +136,8 @@ export class PrismaOrderRepository {
       updatedAt: new Date(),
     }
 
-    if (nextStatus === 'OVEN') {
-      dataToUpdate.ovenEnteredAt = new Date()
-    }
-    if (nextStatus === 'READY') {
-      dataToUpdate.actualReadyAt = new Date()
-    }
+    if (nextStatus === 'OVEN') dataToUpdate.ovenEnteredAt = new Date()
+    if (nextStatus === 'READY') dataToUpdate.actualReadyAt = new Date()
 
     const updated = await prisma.order.update({
       where: { id: orderId },
@@ -205,3 +193,5 @@ export class PrismaOrderRepository {
     }
   }
 }
+
+

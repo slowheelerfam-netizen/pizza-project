@@ -1,4 +1,6 @@
-import prisma from '@/lib/prisma'
+import { getPrisma } from '@/lib/prisma'
+
+const prisma = getPrisma()
 
 export class PrismaAdminActionRepository {
   async getAll() {
@@ -9,4 +11,5 @@ export class PrismaAdminActionRepository {
     })
   }
 }
+
 
