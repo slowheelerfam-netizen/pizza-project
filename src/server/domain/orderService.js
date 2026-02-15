@@ -4,7 +4,12 @@ import { handleOrderReadiness } from '@/domain/orderReadiness'
 import { handleOvenEntry } from '@/domain/ovenHooks'
 import { logAdminAction } from '@/domain/adminActionService'
 import crypto from 'crypto'
-import { getPrisma } from '@/server/services/prismaClient'
+import { DEMO_MODE } from '@/lib/demoMode'
+
+let prismaClient = null
+if (!DEMO_MODE) {
+  prismaClient = require('@/lib/prisma').getPrisma()
+}
 
 export class OrderService {
   constructor(
@@ -17,7 +22,7 @@ export class OrderService {
     this.warnings = warningsRepository
     this.actions = adminActionRepository
     this.notifications = notificationsRepository
-    this.prisma = getPrisma()
+    this.prisma = prismaClient
   }
 
   async createOrder(input) {
@@ -72,7 +77,7 @@ export class OrderService {
     }
 
     if (this.prisma) {
-      // Optional: persist to DB if DATABASE_URL exists
+      // Optional: persist to DB if not in DEMO_MODE
     }
 
     const created = await this.orders.create(order)
@@ -168,5 +173,6 @@ export class OrderService {
     return { order: updatedOrder, actionLog }
   }
 }
+
 
 
